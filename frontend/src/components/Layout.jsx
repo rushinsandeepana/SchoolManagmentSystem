@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
+import Footer from './Footer'
 
 export default function Layout() {
   const { t, i18n } = useTranslation()
@@ -86,6 +87,8 @@ export default function Layout() {
       <main className="main fade-in">
         <Outlet />
       </main>
+
+      <Footer />
     </div>
   )
 }
