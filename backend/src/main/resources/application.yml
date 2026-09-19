@@ -1,0 +1,29 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/school_management
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 55MB
+
+app:
+  jwt:
+    secret: SchoolManagementSystemSecretKeyForJwtTokensMustBeLongEnough2026
+    expiration-ms: 86400000
+  upload:
+    dir: uploads
+
+cors:
+  allowed-origins: http://localhost:5173,http://localhost:3000
