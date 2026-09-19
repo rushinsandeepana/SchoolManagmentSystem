@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import api from '../../services/api'
-import WeekSchedule from '../../components/WeekSchedule'
+import WeekSchedule from '../../../components/WeekSchedule'
+import { teacherApi } from '../../../api/teacherApi'
+import type { PeriodSlot } from '../../../types/period'
 
 export default function TeacherSchedulePage() {
   const { t } = useTranslation()
-  const [slots, setSlots] = useState([])
+  const [slots, setSlots] = useState<PeriodSlot[]>([])
 
   useEffect(() => {
-    api.get('/teacher/schedule').then((res) => setSlots(res.data))
+    teacherApi.getMySchedule().then((res) => setSlots(res.data))
   }, [])
 
   return (

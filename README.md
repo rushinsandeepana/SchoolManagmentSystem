@@ -51,17 +51,16 @@ If your PostgreSQL user is not `postgres`, create a user or use your existing cr
 
 ### Configure backend database settings
 
-Edit `backend/src/main/resources/application.yml`:
+Copy `backend/.env.example` to `backend/.env` and set your local values:
 
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/school_management
-    username: postgres      # change if needed
-    password: postgres      # change to your PostgreSQL password
+```dotenv
+DB_URL=jdbc:postgresql://localhost:5433/school_management
+DB_USERNAME=postgres
+DB_PASSWORD=your-postgres-password
+JWT_SECRET=replace-with-a-long-random-secret
 ```
 
-Tables are created automatically on first startup (`ddl-auto: update`). Demo users are seeded automatically.
+Spring Boot imports this file through `application.yml`. Tables are created automatically on first startup (`ddl-auto: update`). Demo users are seeded automatically.
 
 ---
 
@@ -95,9 +94,17 @@ npm install
 npm run dev
 ```
 
+The frontend settings are in `frontend/.env`:
+
+```dotenv
+VITE_PORT=5173
+VITE_BACKEND_URL=http://localhost:8080
+VITE_API_BASE_URL=/api
+```
+
 - App URL: **http://localhost:5173**
 
-The Vite dev server proxies `/api` requests to `http://localhost:8080`, so you do not need to change CORS for local development.
+Axios reads `VITE_API_BASE_URL` and sends requests to `/api`. During development, Vite proxies that path to `VITE_BACKEND_URL`, so the browser and frontend still use one origin and CORS is not normally involved. The backend separately reads `CORS_ALLOWED_ORIGINS` for direct frontend-to-backend requests.
 
 **Keep this terminal running** while you use the app.
 
@@ -148,6 +155,8 @@ npm run preview
 ```
 
 For a real deployment, host the `frontend/dist` build behind a web server and point API calls to your Spring Boot server.
+
+For a separate frontend and backend in production, set `frontend/.env` to the public API URL, for example `VITE_API_BASE_URL=https://api.example.com/api`. Set the backend `CORS_ALLOWED_ORIGINS` to the public frontend URL. `VITE_*` values are bundled into browser JavaScript, so never put passwords or JWT secrets in the frontend `.env` file.
 
 ---
 

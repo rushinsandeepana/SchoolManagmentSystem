@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import api from '../../services/api'
-import MonthCalendar from '../../components/MonthCalendar'
+import MonthCalendar from '../../../components/MonthCalendar'
+import { dashboardApi } from '../../../api/dashboardApi'
+import type { DashboardSummary } from '../../../types/dashboard'
 
-export default function AdminDashboard() {
+export default function DashboardPage() {
   const { t } = useTranslation()
-  const [data, setData] = useState(null)
+  const [data, setData] = useState<DashboardSummary | null>(null)
 
   useEffect(() => {
-    api.get('/admin/dashboard').then((res) => setData(res.data))
+    dashboardApi.getSummary().then((res) => setData(res.data))
   }, [])
 
   if (!data) return <div className="muted">Loading...</div>
@@ -18,9 +19,7 @@ export default function AdminDashboard() {
       <div className="section-head">
         <div>
           <h1>{t('dashboard')}</h1>
-          <p className="muted" style={{ margin: 0 }}>
-            {t('teacherPerformance')}
-          </p>
+          <p className="muted" style={{ margin: 0 }}>{t('teacherPerformance')}</p>
         </div>
       </div>
 

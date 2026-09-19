@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import NoteFormModal from '../components/NoteFormModal'
 
 export default function NotesPage() {
   const { t } = useTranslation()
@@ -13,6 +14,7 @@ export default function NotesPage() {
   const [content, setContent] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [showForm, setShowForm] = useState(false)
 
   const isAdmin = user?.role === 'ADMIN'
 
@@ -56,6 +58,7 @@ export default function NotesPage() {
       }
       setTitle('')
       setContent('')
+      setShowForm(false)
       setMessage(t('created'))
     } catch (err) {
       setError(err.response?.data?.message || 'Error')
@@ -73,39 +76,27 @@ export default function NotesPage() {
     <div className="fade-in">
       <div className="section-head">
         <h1>{t('notes')}</h1>
+        <button className="btn" type="button" onClick={() => setShowForm(true)}>
+          {t('addNote')}
+        </button>
       </div>
 
       {message && <div className="alert alert-ok">{message}</div>}
       {error && <div className="alert alert-error">{error}</div>}
 
-      <div className="card" style={{ marginBottom: '1rem' }}>
-        <h3>{t('addNote')}</h3>
-        <form className="form" onSubmit={onSubmit}>
-          {isAdmin && (
-            <label>
-              {t('teacher')}
-              <select value={teacherId} onChange={(e) => setTeacherId(e.target.value)} required>
-                {teachers.map((teacher) => (
-                  <option key={teacher.id} value={teacher.id}>
-                    {teacher.fullName}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
-          <label>
-            {t('noteTitle')}
-            <input value={title} onChange={(e) => setTitle(e.target.value)} required />
-          </label>
-          <label>
-            {t('noteContent')}
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} required />
-          </label>
-          <button className="btn" type="submit">
-            {t('addNote')}
-          </button>
-        </form>
-      </div>
+      <NoteFormModal
+        open={showForm}
+        isAdmin={isAdmin}
+        teachers={teachers}
+        teacherId={teacherId}
+        setTeacherId={setTeacherId}
+        title={title}
+        setTitle={setTitle}
+        content={content}
+        setContent={setContent}
+        onSubmit={onSubmit}
+        onClose={() => setShowForm(false)}
+      />
 
       <div className="card" style={{ display: 'grid', gap: '0.75rem' }}>
         {notes.length === 0 && <p className="muted">{t('noNotes')}</p>}
