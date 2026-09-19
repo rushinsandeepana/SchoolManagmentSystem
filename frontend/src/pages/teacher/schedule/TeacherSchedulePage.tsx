@@ -16,10 +16,8 @@ export default function TeacherSchedulePage() {
     <div className="fade-in">
       <div className="section-head">
         <div>
-          <h1>{t('mySchedule')}</h1>
-          <p className="muted" style={{ margin: 0 }}>
-            {t('weekSchedule')}
-          </p>
+          <h1 className="text-2xl sm:text-3xl">{t('schedule.mySchedule')}</h1>
+          <p className="m-0 muted">{t('schedule.weekly')}</p>
         </div>
       </div>
       <div className="card">

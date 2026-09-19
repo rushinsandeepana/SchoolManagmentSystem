@@ -19,11 +19,11 @@ export default function WeekSchedule({ slots }) {
   return (
     <div>
       <div className="legend">
-        <span className="badge badge-mandatory">{t('mandatory')}</span>
-        <span className="badge badge-relief">{t('relief')}</span>
-        <span className="badge badge-free">{t('free')}</span>
+        <span className="badge badge-mandatory">{t('schedule.mandatory')}</span>
+        <span className="badge badge-relief">{t('schedule.relief')}</span>
+        <span className="badge badge-free">{t('schedule.free')}</span>
       </div>
-      <p className="muted">{t('clickPeriod')}</p>
+      <p className="muted">{t('schedule.clickPeriod')}</p>
       <div className="schedule-grid">
         <div className="schedule-header">
           <span />

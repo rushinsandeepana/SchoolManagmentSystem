@@ -6,14 +6,17 @@ export default function Button({
   children,
   ...props
 }) {
-  const classes = ['ui-button', `ui-button--${variant}`, `ui-button--${size}`]
-
-  if (className) {
-    classes.push(className)
-  }
+  const classes = [
+    'ui-button',
+    `ui-button--${variant}`,
+    size !== 'md' ? `ui-button--${size}` : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ')
 
   return (
-    <button type={type} className={classes.join(' ')} {...props}>
+    <button type={type} className={classes} {...props}>
       {children}
     </button>
   )

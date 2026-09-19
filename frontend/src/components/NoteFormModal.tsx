@@ -5,11 +5,11 @@ export default function NoteFormModal({ open, isAdmin, teachers, teacherId, setT
   const { t } = useTranslation()
 
   return (
-    <Modal open={open} title={t('addNote')} onClose={onClose}>
+    <Modal open={open} title={t('notes.add')} onClose={onClose}>
       <form className="form" onSubmit={onSubmit}>
         {isAdmin && (
           <label>
-            {t('teacher')}
+            {t('teacher.singular')}
             <select value={teacherId} onChange={(e) => setTeacherId(e.target.value)} required>
               {teachers.map((teacher) => (
                 <option key={teacher.id} value={teacher.id}>
@@ -20,16 +20,18 @@ export default function NoteFormModal({ open, isAdmin, teachers, teacherId, setT
           </label>
         )}
         <label>
-          {t('noteTitle')}
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required />
+          {t('notes.noteTitle')}
+          <input placeholder={t('notes.placeholders.title')} value={title} onChange={(e) => setTitle(e.target.value)} required />
         </label>
         <label>
-          {t('noteContent')}
-          <textarea value={content} onChange={(e) => setContent(e.target.value)} required />
+          {t('notes.noteContent')}
+          <textarea placeholder={t('notes.placeholders.content')} value={content} onChange={(e) => setContent(e.target.value)} required />
         </label>
-        <button className="btn" type="submit">
-          {t('addNote')}
-        </button>
+        <div className="form-actions">
+          <button className="btn w-full sm:w-auto" type="submit">
+            {t('notes.add')}
+          </button>
+        </div>
       </form>
     </Modal>
   )

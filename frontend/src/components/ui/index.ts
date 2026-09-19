@@ -1,3 +1,6 @@
 export { default as Button } from './Button'
 export { InputField, SelectField, CheckboxField, MultiSelectField } from './Field'
 export { default as DataTable } from './Table'
+export { default as SearchInput } from './SearchInput'
+export { default as Pagination } from './Pagination'
+export { default as ListControls } from './ListControls'

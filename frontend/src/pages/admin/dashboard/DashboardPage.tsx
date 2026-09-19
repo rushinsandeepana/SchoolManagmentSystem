@@ -2,62 +2,83 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import MonthCalendar from '../../../components/MonthCalendar'
 import { dashboardApi } from '../../../api/dashboardApi'
-import type { DashboardSummary } from '../../../types/dashboard'
+import { ListControls } from '../../../components/ui'
+import { useClientList } from '../../../hooks/useClientList'
+import type { DashboardSummary, TeacherPerformance } from '../../../types/dashboard'
 
 export default function DashboardPage() {
   const { t } = useTranslation()
   const [data, setData] = useState<DashboardSummary | null>(null)
+  const performance: TeacherPerformance[] = data?.teacherPerformance || []
+  const list = useClientList(performance, {
+    searchKeys: ['fullName', 'subject'],
+    defaultPageSize: 5,
+  })
 
   useEffect(() => {
     dashboardApi.getSummary().then((res) => setData(res.data))
   }, [])
 
-  if (!data) return <div className="muted">Loading...</div>
+  if (!data) return <div className="muted">{t('common.loading')}</div>
 
   return (
     <div className="fade-in">
       <div className="section-head">
         <div>
-          <h1>{t('dashboard')}</h1>
-          <p className="muted" style={{ margin: 0 }}>{t('teacherPerformance')}</p>
+          <h1 className="text-2xl sm:text-3xl">{t('dashboard.title')}</h1>
+          <p className="m-0 muted">{t('dashboard.teacherPerformance')}</p>
         </div>
       </div>
 
       <div className="stats-grid">
         <div className="stat">
-          <div className="label">{t('totalTeachers')}</div>
+          <div className="label">{t('dashboard.totalTeachers')}</div>
           <div className="value">{data.totalTeachers}</div>
         </div>
         <div className="stat">
-          <div className="label">{t('activeTeachers')}</div>
+          <div className="label">{t('dashboard.activeTeachers')}</div>
           <div className="value">{data.activeTeachers}</div>
         </div>
         <div className="stat">
-          <div className="label">{t('periodsAssigned')}</div>
+          <div className="label">{t('dashboard.periodsAssigned')}</div>
           <div className="value">{data.totalPeriodsAssigned}</div>
         </div>
       </div>
 
       <div className="grid-2">
         <div className="card">
-          <h3>{t('teacherPerformance')}</h3>
-          <div style={{ display: 'grid', gap: '0.85rem' }}>
-            {(data.teacherPerformance || []).map((teacher) => (
-              <div key={teacher.id}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.5rem' }}>
-                  <strong>{teacher.fullName}</strong>
-                  <span className="muted">{teacher.performanceScore ?? 0}%</span>
+          <h3>{t('dashboard.teacherPerformance')}</h3>
+          <ListControls
+            searchValue={list.search}
+            onSearchChange={list.setSearch}
+            searchPlaceholder={t('common.searchPlaceholder')}
+            page={list.page}
+            pageSize={list.pageSize}
+            totalElements={list.totalElements}
+            totalPages={list.totalPages}
+            onPageChange={list.setPage}
+            onPageSizeChange={list.setPageSize}
+          >
+            <div className="grid gap-3.5">
+              {list.content.map((teacher) => (
+                <div key={teacher.id}>
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <strong className="break-words">{teacher.fullName}</strong>
+                    <span className="muted shrink-0">{teacher.performanceScore ?? 0}%</span>
+                  </div>
+                  <div className="text-sm text-muted">{teacher.subject || '—'}</div>
+                  <div className="perf-bar">
+                    <span style={{ width: `${Math.min(100, teacher.performanceScore || 0)}%` }} />
+                  </div>
                 </div>
-                <div className="muted" style={{ fontSize: '0.85rem' }}>
-                  {teacher.subject || '—'}
-                </div>
-                <div className="perf-bar">
-                  <span style={{ width: `${Math.min(100, teacher.performanceScore || 0)}%` }} />
-                </div>
-              </div>
-            ))}
-            {!data.teacherPerformance?.length && <p className="muted">{t('teachers')}: 0</p>}
-          </div>
+              ))}
+              {!list.content.length && (
+                <p className="muted">
+                  {list.search ? t('common.noResults') : t('dashboard.emptyPerformance')}
+                </p>
+              )}
+            </div>
+          </ListControls>
         </div>
         <MonthCalendar />
       </div>

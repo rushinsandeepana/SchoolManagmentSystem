@@ -1,4 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
+import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from './context/AuthContext'
 import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
@@ -9,10 +11,16 @@ import TeacherSchedulePage from './pages/teacher/schedule/TeacherSchedulePage'
 import PeriodDetailPage from './pages/PeriodDetailPage'
 import NotesPage from './pages/NotesPage'
 import ChangePasswordPage from './pages/ChangePasswordPage'
+import SubjectsPage from './pages/admin/subject/SubjectsPage'
 
-function PrivateRoute({ children, roles }) {
-  const { user, loading } = useAuth()
-  if (loading) return <div className="page-center">Loading...</div>
+function PrivateRoute({ children, roles }: { children: ReactNode; roles?: string[] }) {
+  const { t } = useTranslation()
+  const auth = useAuth() as unknown as {
+    user: { role: string } | null
+    loading: boolean
+  }
+  const { user, loading } = auth
+  if (loading) return <div className="page-center">{t('common.loading')}</div>
   if (!user) return <Navigate to="/login" replace />
   if (roles && !roles.includes(user.role)) {
     return <Navigate to={user.role === 'ADMIN' ? '/admin' : '/teacher'} replace />
@@ -50,6 +58,14 @@ export default function App() {
           }
         />
         <Route
+          path="admin/subjects"
+          element={
+            <PrivateRoute roles={['ADMIN']}>
+              <SubjectsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
           path="admin/periods"
           element={
             <PrivateRoute roles={['ADMIN']}>
@@ -75,7 +91,9 @@ export default function App() {
 }
 
 function HomeRedirect() {
-  const { user } = useAuth()
+  const { user } = useAuth() as unknown as {
+    user: { role: string } | null
+  }
   if (!user) return <Navigate to="/login" replace />
   return <Navigate to={user.role === 'ADMIN' ? '/admin' : '/teacher'} replace />
 }

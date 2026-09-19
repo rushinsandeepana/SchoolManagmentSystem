@@ -31,8 +31,11 @@ public class AdminController {
     }
 
     @GetMapping("/teachers")
-    public List<UserResponse> listTeachers() {
-        return teacherService.listTeachers();
+    public PageResponse<UserResponse> listTeachers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search) {
+        return teacherService.listTeachers(page, size, search);
     }
 
     @GetMapping("/teachers/{id}")
@@ -80,10 +83,13 @@ public class AdminController {
     }
 
     @GetMapping("/teachers/{id}/notes")
-    public List<TeacherNoteResponse> teacherNotes(
+    public PageResponse<TeacherNoteResponse> teacherNotes(
             @PathVariable Long id,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return teacherNoteService.listForTeacher(id, principal);
+        return teacherNoteService.listForTeacher(id, principal, page, size, search);
     }
 
     @DeleteMapping("/notes/{id}")

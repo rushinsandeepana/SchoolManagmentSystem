@@ -27,19 +27,22 @@ export default function LoginPage() {
       const u = await login(username.trim(), password)
       navigate(u.role === 'ADMIN' ? '/admin' : '/teacher')
     } catch {
-      setError(t('loginError'))
+      setError(t('auth.loginError'))
     } finally {
       setBusy(false)
     }
   }
 
   return (
-    <div className="login-page">
-      <div className="login-page-body">
-        <div className="login-card">
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.4rem', marginBottom: '0.75rem' }}>
+    <div
+      className="flex min-h-screen flex-col"
+      style={{ background: 'var(--hero-grad)' }}
+    >
+      <div className="grid flex-1 place-items-center p-4 sm:p-6">
+        <div className="fade-in w-full max-w-[420px] rounded-2xl border border-border bg-surface p-5 shadow-card sm:p-7">
+          <div className="mb-3 flex flex-wrap justify-end gap-2">
             <button className="btn btn-outline btn-sm" type="button" onClick={toggleTheme}>
-              {theme === 'light' ? t('darkMode') : t('lightMode')}
+              {theme === 'light' ? t('common.darkMode') : t('common.lightMode')}
             </button>
             <select
               value={i18n.language?.startsWith('si') ? 'si' : 'en'}
@@ -47,33 +50,46 @@ export default function LoginPage() {
                 i18n.changeLanguage(e.target.value)
                 localStorage.setItem('lang', e.target.value)
               }}
-              style={{ width: 'auto' }}
+              className="w-auto"
             >
-              <option value="en">{t('english')}</option>
-              <option value="si">{t('sinhala')}</option>
+              <option value="en">{t('common.english')}</option>
+              <option value="si">{t('common.sinhala')}</option>
             </select>
           </div>
-          <div className="brand-lg">{t('appName')}</div>
-          <p className="muted">{t('tagline')}</p>
-          <h2 style={{ marginTop: '1.25rem' }}>{t('loginTitle')}</h2>
-          <p className="muted">{t('loginSubtitle')}</p>
+          <div className="font-display text-[clamp(1.6rem,5vw,2rem)] font-bold leading-tight">
+            {t('app.name')}
+          </div>
+          <p className="muted">{t('app.tagline')}</p>
+          <h2 className="mt-5">{t('auth.loginTitle')}</h2>
+          <p className="muted">{t('auth.loginSubtitle')}</p>
           {error && <div className="alert alert-error">{error}</div>}
           <form className="form" onSubmit={onSubmit}>
             <label>
-              {t('username')}
-              <input value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" required />
+              {t('auth.username')}
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder={t('auth.placeholders.username')}
+                autoComplete="username"
+                required
+              />
             </label>
             <label>
-              {t('password')}
-              <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+              {t('auth.password')}
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t('auth.placeholders.password')}
+                autoComplete="current-password"
+                required
+              />
             </label>
-            <button className="btn" type="submit" disabled={busy}>
-              {t('login')}
+            <button className="btn w-full sm:w-auto" type="submit" disabled={busy}>
+              {t('auth.login')}
             </button>
           </form>
-          <p className="muted" style={{ marginTop: '1rem', fontSize: '0.8rem' }}>
-            {t('demoAccounts')}
-          </p>
+          <p className="mt-4 text-xs text-muted">{t('auth.demoAccounts')}</p>
         </div>
       </div>
       <Footer />

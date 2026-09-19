@@ -3,6 +3,7 @@ package com.school.management.controller;
 import com.school.management.dto.request.PeriodContentRequest;
 import com.school.management.dto.request.TeacherNoteRequest;
 import com.school.management.dto.response.ApiMessage;
+import com.school.management.dto.response.PageResponse;
 import com.school.management.dto.response.PeriodDetailResponse;
 import com.school.management.dto.response.PeriodSlotResponse;
 import com.school.management.dto.response.TeacherNoteResponse;
@@ -45,8 +46,12 @@ public class TeacherController {
     }
 
     @GetMapping("/notes")
-    public List<TeacherNoteResponse> myNotes(@AuthenticationPrincipal UserPrincipal principal) {
-        return teacherNoteService.listForTeacher(principal.getId(), principal);
+    public PageResponse<TeacherNoteResponse> myNotes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String search,
+            @AuthenticationPrincipal UserPrincipal principal) {
+        return teacherNoteService.listForTeacher(principal.getId(), principal, page, size, search);
     }
 
     @PostMapping("/notes")

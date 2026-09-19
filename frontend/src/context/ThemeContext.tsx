@@ -1,8 +1,15 @@
 import { createContext, useContext, useEffect, useState } from 'react'
+import type { Dispatch, ReactNode, SetStateAction } from 'react'
 
-const ThemeContext = createContext(null)
+type ThemeContextValue = {
+  theme: string
+  toggleTheme: () => void
+  setTheme: Dispatch<SetStateAction<string>>
+}
 
-export function ThemeProvider({ children }) {
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
+
+export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light')
 
   useEffect(() => {
@@ -20,5 +27,11 @@ export function ThemeProvider({ children }) {
 }
 
 export function useTheme() {
-  return useContext(ThemeContext)
+  const context = useContext(ThemeContext)
+
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider')
+  }
+
+  return context
 }

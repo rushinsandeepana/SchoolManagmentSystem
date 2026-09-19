@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import WeekSchedule from '../../../components/WeekSchedule'
 import AssignPeriodFormModal from '../../../components/AssignPeriodFormModal'
 import { periodApi } from '../../../api/periodApi'
+import { useToast } from '../../../context/ToastContext'
 import type { PeriodForm, PeriodSlot } from '../../../types/period'
 
 const emptyForm: PeriodForm = {
@@ -16,18 +17,18 @@ const emptyForm: PeriodForm = {
 
 export default function AssignPeriodsPage() {
   const { t } = useTranslation()
+  const { showToast } = useToast()
   const [teachers, setTeachers] = useState<Array<{ id: number; fullName: string }>>([])
   const [teacherId, setTeacherId] = useState<string>('')
   const [slots, setSlots] = useState<PeriodSlot[]>([])
   const [form, setForm] = useState<PeriodForm>(emptyForm)
-  const [message, setMessage] = useState('')
-  const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
     periodApi.getTeachers().then((res) => {
-      setTeachers(res.data)
-      if (res.data[0]) setTeacherId(String(res.data[0].id))
+      const list = res.data.content || []
+      setTeachers(list)
+      if (list[0]) setTeacherId(String(list[0].id))
     })
   }, [])
 
@@ -41,8 +42,6 @@ export default function AssignPeriodsPage() {
 
   const onAssign = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError('')
-    setMessage('')
 
     try {
       await periodApi.assign({
@@ -54,26 +53,23 @@ export default function AssignPeriodsPage() {
         className: form.className || null,
         title: form.title || null,
       })
-      setMessage(t('updated'))
+      showToast(t('common.updated'), 'success')
       const res = await periodApi.getTeacherSchedule(teacherId)
       setSlots(res.data)
       setShowForm(false)
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error')
+      showToast(err.response?.data?.message || t('common.error'), 'error')
     }
   }
 
   return (
     <div className="fade-in">
       <div className="section-head">
-        <h1>{t('assignPeriods')}</h1>
-        <button className="btn" type="button" onClick={() => setShowForm(true)}>
-          {t('assign')}
+        <h1 className="text-2xl sm:text-3xl">{t('nav.assignPeriods')}</h1>
+        <button className="btn w-full sm:w-auto" type="button" onClick={() => setShowForm(true)}>
+          {t('schedule.assign')}
         </button>
       </div>
-
-      {message && <div className="alert alert-ok">{message}</div>}
-      {error && <div className="alert alert-error">{error}</div>}
 
       <AssignPeriodFormModal
         open={showForm}
@@ -87,7 +83,7 @@ export default function AssignPeriodsPage() {
       />
 
       <div className="card">
-        <h3>{t('weekSchedule')}</h3>
+        <h3>{t('schedule.weekly')}</h3>
         <WeekSchedule slots={slots} />
       </div>
     </div>

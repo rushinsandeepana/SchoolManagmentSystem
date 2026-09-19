@@ -1,44 +1,44 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import type { ChangeEvent } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { teacherApi } from '../../../api/teacherApi'
+import { subjectApi } from '../../../api/subjectApi'
 import { Button, DataTable } from '../../../components/ui'
 import { useServerList } from '../../../hooks/useServerList'
 import { useToast } from '../../../context/ToastContext'
-import TeacherFormModal from './TeacherFormModal'
-import type { Teacher, TeacherForm } from '../../../types/teacher'
+import SubjectFormModal from './SubjectFormModal'
+import type { Subject, SubjectForm } from '../../../types/subject'
 
-const emptyForm: TeacherForm = {
-  username: '',
-  password: '',
-  fullName: '',
-  email: '',
-  subject: '',
-  performanceScore: 70,
+const emptyForm: SubjectForm = {
+  subjectName: '',
+  subjectCode: '',
+  subjectType: '',
   active: true,
 }
 
-export default function TeachersPage() {
+export default function SubjectsPage() {
   const { t } = useTranslation()
   const { showToast } = useToast()
-  const [form, setForm] = useState(emptyForm)
+  const [form, setForm] = useState<SubjectForm>(emptyForm)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
 
   const fetcher = useCallback(
-    (query: { page?: number; size?: number; search?: string }) => teacherApi.list(query),
+    (query: { page?: number; size?: number; search?: string }) => subjectApi.list(query),
     []
   )
+  const list = useServerList<Subject>(fetcher)
 
-  const list = useServerList<Teacher>(fetcher)
-
-  // Show list-level errors as toasts
   useEffect(() => {
     if (list.error) showToast(list.error, 'error')
   }, [list.error, showToast])
 
-  const onChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+  const onChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = event.target
+    setForm((previous) => ({
+      ...previous,
+      [name]: name === 'active' ? value === 'true' : value,
+    }))
+  }
 
   const startCreate = () => {
     setEditingId(null)
@@ -46,38 +46,32 @@ export default function TeachersPage() {
     setShowForm(true)
   }
 
-  const startEdit = (teacher: Teacher) => {
-    setEditingId(teacher.id)
+  const startEdit = (subject: Subject) => {
+    setEditingId(subject.id)
     setForm({
-      username: teacher.username,
-      password: '',
-      fullName: teacher.fullName || '',
-      email: teacher.email || '',
-      subject: teacher.subject || '',
-      performanceScore: teacher.performanceScore ?? 0,
-      active: teacher.active,
+      subjectName: subject.subjectName || '',
+      subjectCode: subject.subjectCode || '',
+      subjectType: subject.subjectType || '',
+      active: subject.active,
     })
     setShowForm(true)
   }
 
-  const onSubmit = async (e: { preventDefault: () => void }) => {
-    e.preventDefault()
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
 
     try {
       if (editingId) {
-        await teacherApi.update(editingId, {
-          fullName: form.fullName,
-          email: form.email,
-          subject: form.subject,
-          performanceScore: Number(form.performanceScore),
+        await subjectApi.update(editingId, {
+          subjectName: form.subjectName,
+          subjectCode: form.subjectCode,
+          subjectType: form.subjectType,
           active: form.active,
-          password: form.password || undefined,
         })
         showToast(t('common.updated'), 'success')
       } else {
-        await teacherApi.create({
+        await subjectApi.create({
           ...form,
-          performanceScore: Number(form.performanceScore),
         })
         showToast(t('common.created'), 'success')
       }
@@ -85,46 +79,42 @@ export default function TeachersPage() {
       setShowForm(false)
       setForm(emptyForm)
       list.reload()
-    } catch (err: any) {
-      showToast(err.response?.data?.message || t('common.error'), 'error')
+    } catch (error: any) {
+      showToast(error.response?.data?.message || t('common.error'), 'error')
     }
   }
 
   const onDelete = async (id: number) => {
     if (!window.confirm(t('common.confirmDelete'))) return
+
     try {
-      await teacherApi.remove(id)
+      await subjectApi.remove(id)
       showToast(t('common.deleted', 'Deleted successfully'), 'success')
       list.reload()
-    } catch (err: any) {
-      showToast(err.response?.data?.message || t('common.error'), 'error')
+    } catch (error: any) {
+      showToast(error.response?.data?.message || t('common.error'), 'error')
     }
   }
 
   const columns = useMemo(
     () => [
-      { key: 'fullName', label: t('teacher.fullName') },
-      { key: 'username', label: t('auth.username') },
-      { key: 'subject', label: t('teacher.subject') },
-      {
-        key: 'performanceScore',
-        label: t('teacher.performanceScore'),
-        render: (teacher: Teacher) => `${teacher.performanceScore ?? 0}%`,
-      },
+      { key: 'subjectName', label: t('subject.subjectName') },
+      { key: 'subjectCode', label: t('subject.subjectCode') },
+      { key: 'subjectType', label: t('subject.subjectType') },
       {
         key: 'active',
         label: t('common.active'),
-        render: (teacher: Teacher) => (teacher.active ? t('common.active') : t('common.inactive')),
+        render: (subject: Subject) => (subject.active ? t('common.active') : t('common.inactive')),
       },
       {
         key: 'actions',
         label: t('common.actions'),
-        render: (teacher: Teacher) => (
+        render: (subject: Subject) => (
           <div className="ui-action-group">
-            <Button type="button" variant="secondary" size="sm" onClick={() => startEdit(teacher)}>
+            <Button type="button" variant="secondary" size="sm" onClick={() => startEdit(subject)}>
               {t('common.manage')}
             </Button>
-            <Button type="button" variant="danger" size="sm" onClick={() => onDelete(teacher.id)}>
+            <Button type="button" variant="danger" size="sm" onClick={() => onDelete(subject.id)}>
               {t('common.delete')}
             </Button>
           </div>
@@ -137,18 +127,17 @@ export default function TeachersPage() {
   return (
     <div className="fade-in">
       <div className="section-head">
-        <h1 className="text-2xl sm:text-3xl">{t('nav.teachers')}</h1>
+        <h1 className="text-2xl sm:text-3xl">{t('nav.subjects')}</h1>
         <Button className="w-full sm:w-auto" onClick={startCreate}>
-          {t('teacher.add')}
+          {t('subject.add')}
         </Button>
       </div>
 
-      <TeacherFormModal
+      <SubjectFormModal
         open={showForm}
         editingId={editingId}
         form={form}
         onChange={onChange}
-        onToggleActive={() => setForm((f) => ({ ...f, active: !f.active }))}
         onSubmit={onSubmit}
         onClose={() => setShowForm(false)}
       />
@@ -157,7 +146,7 @@ export default function TeachersPage() {
         <DataTable
           columns={columns}
           data={list.content}
-          getRowKey={(teacher) => teacher.id}
+          getRowKey={(subject) => subject.id}
           emptyMessage={list.search ? t('common.noResults') : t('common.emptyTableMessage')}
           searchable
           searchValue={list.search}

@@ -1,10 +1,24 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import api from '../services/api'
 
-const AuthContext = createContext(null)
+type User = {
+  userId: number
+  username: string
+  fullName: string
+  role: string
+}
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
+type AuthContextValue = {
+  user: User | null
+  loading: boolean
+  login: (username: any, password: any) => Promise<User>
+  logout: () => void
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -34,7 +48,7 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const login = async (username, password) => {
+  const login = async (username: any, password: any) => {
     const { data } = await api.post('/auth/login', { username, password })
     const u = {
       userId: data.userId,

@@ -1,6 +1,7 @@
 package com.school.management.service;
 
 import com.school.management.dto.request.TeacherNoteRequest;
+import com.school.management.dto.response.PageResponse;
 import com.school.management.dto.response.TeacherNoteResponse;
 import com.school.management.exception.BadRequestException;
 import com.school.management.exception.ResourceNotFoundException;
@@ -11,6 +12,8 @@ import com.school.management.model.enums.Role;
 import com.school.management.repository.TeacherNoteRepository;
 import com.school.management.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +31,20 @@ public class TeacherNoteService {
         return teacherNoteRepository.findByTeacherIdOrderByCreatedAtDesc(teacherId).stream()
                 .map(EntityMapper::toTeacherNoteResponse)
                 .toList();
+    }
+
+    public PageResponse<TeacherNoteResponse> listForTeacher(
+            Long teacherId, UserPrincipal currentUser, int page, int size, String search) {
+        assertNoteAccess(teacherId, currentUser);
+        int safePage = Math.max(page, 0);
+        int safeSize = size <= 0 ? 10 : Math.min(size, 100);
+        String query = search == null ? "" : search.trim();
+        return PageResponse.from(
+                teacherNoteRepository.searchByTeacherId(
+                        teacherId,
+                        query,
+                        PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"))),
+                EntityMapper::toTeacherNoteResponse);
     }
 
     @Transactional

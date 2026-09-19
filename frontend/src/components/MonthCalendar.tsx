@@ -22,9 +22,9 @@ export default function MonthCalendar() {
 
   return (
     <div className="card">
-      <h3>{t('calendar')}</h3>
-      <p className="muted" style={{ marginTop: 0 }}>
-        {monthName} · {t('today')}: {today}
+      <h3>{t('schedule.calendar')}</h3>
+      <p className="mt-0 muted">
+        {monthName} · {t('schedule.today')}: {today}
       </p>
       <div className="calendar">
         {dows.map((d) => (

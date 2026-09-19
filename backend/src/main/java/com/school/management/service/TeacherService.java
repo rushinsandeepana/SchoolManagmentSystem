@@ -3,6 +3,7 @@ package com.school.management.service;
 import com.school.management.dto.request.CreateTeacherRequest;
 import com.school.management.dto.request.UpdateTeacherRequest;
 import com.school.management.dto.response.DashboardResponse;
+import com.school.management.dto.response.PageResponse;
 import com.school.management.dto.response.UserResponse;
 import com.school.management.exception.BadRequestException;
 import com.school.management.exception.ResourceNotFoundException;
@@ -15,6 +16,8 @@ import com.school.management.repository.PeriodSlotRepository;
 import com.school.management.repository.TeacherNoteRepository;
 import com.school.management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +39,18 @@ public class TeacherService {
         return userRepository.findByRoleOrderByFullNameAsc(Role.TEACHER).stream()
                 .map(EntityMapper::toUserResponse)
                 .toList();
+    }
+
+    public PageResponse<UserResponse> listTeachers(int page, int size, String search) {
+        int safePage = Math.max(page, 0);
+        int safeSize = size <= 0 ? 10 : Math.min(size, 100);
+        String query = search == null ? "" : search.trim();
+        return PageResponse.from(
+                userRepository.searchByRole(
+                        Role.TEACHER,
+                        query,
+                        PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.ASC, "fullName"))),
+                EntityMapper::toUserResponse);
     }
 
     public UserResponse getTeacher(Long id) {
