@@ -12,6 +12,7 @@ import PeriodDetailPage from './pages/PeriodDetailPage'
 import NotesPage from './pages/NotesPage'
 import ChangePasswordPage from './pages/ChangePasswordPage'
 import SubjectsPage from './pages/admin/subject/SubjectsPage'
+import ClassesPage from './pages/admin/classes/ClassesPage'
 
 function PrivateRoute({ children, roles }: { children: ReactNode; roles?: string[] }) {
   const { t } = useTranslation()
@@ -62,6 +63,14 @@ export default function App() {
           element={
             <PrivateRoute roles={['ADMIN']}>
               <SubjectsPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="admin/classes"
+          element={
+            <PrivateRoute roles={['ADMIN']}>
+              <ClassesPage />
             </PrivateRoute>
           }
         />

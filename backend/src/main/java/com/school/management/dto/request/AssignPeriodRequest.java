@@ -9,18 +9,18 @@ import lombok.Data;
 
 @Data
 public class AssignPeriodRequest {
-    @NotNull
+    @NotNull(message = "Teacher is required")
     private Long teacherId;
 
-    @NotNull
+    @NotNull(message = "Day is required")
     private DayOfWeek dayOfWeek;
 
-    @NotNull
-    @Min(1)
-    @Max(8)
+    @NotNull(message = "Period is required")
+    @Min(value = 1, message = "Period must be between 1 and 8")
+    @Max(value = 8, message = "Period must be between 1 and 8")
     private Integer periodNumber;
 
-    @NotNull
+    @NotNull(message = "Period type is required")
     private PeriodType periodType;
 
     private String subject;

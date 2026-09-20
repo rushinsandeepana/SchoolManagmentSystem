@@ -9,7 +9,7 @@ export default function NoteFormModal({ open, isAdmin, teachers, teacherId, setT
       <form className="form" onSubmit={onSubmit}>
         {isAdmin && (
           <label>
-            {t('teacher.singular')}
+            {t('teacher.singular')}<span className="required-mark"> *</span>
             <select value={teacherId} onChange={(e) => setTeacherId(e.target.value)} required>
               {teachers.map((teacher) => (
                 <option key={teacher.id} value={teacher.id}>
@@ -20,12 +20,12 @@ export default function NoteFormModal({ open, isAdmin, teachers, teacherId, setT
           </label>
         )}
         <label>
-          {t('notes.noteTitle')}
-          <input placeholder={t('notes.placeholders.title')} value={title} onChange={(e) => setTitle(e.target.value)} required />
+          {t('notes.noteTitle')}<span className="required-mark"> *</span>
+          <input placeholder={t('notes.placeholders.title')} title={t('validation.noteTitleRequired')} value={title} onChange={(e) => setTitle(e.target.value)} required />
         </label>
         <label>
-          {t('notes.noteContent')}
-          <textarea placeholder={t('notes.placeholders.content')} value={content} onChange={(e) => setContent(e.target.value)} required />
+          {t('notes.noteContent')}<span className="required-mark"> *</span>
+          <textarea placeholder={t('notes.placeholders.content')} title={t('validation.noteContentRequired')} value={content} onChange={(e) => setContent(e.target.value)} required />
         </label>
         <div className="form-actions">
           <button className="btn w-full sm:w-auto" type="submit">

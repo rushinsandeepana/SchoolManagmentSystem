@@ -21,6 +21,32 @@ public final class EntityMapper {
                 .build();
     }
 
+    public static SubjectResponse toSubjectResponse(Subject subject) {
+        return SubjectResponse.builder()
+                .id(subject.getId())
+                .subjectName(subject.getSubjectName())
+                .subjectCode(subject.getSubjectCode())
+                .subjectType(subject.getSubjectType())
+                .active(subject.isActive())
+                .createdAt(subject.getCreatedAt())
+                .updatedAt(subject.getUpdatedAt())
+                .build();
+    }
+
+    public static ClassResponse toClassResponse(SchoolClass schoolClass) {
+        return ClassResponse.builder()
+                .id(schoolClass.getId())
+                .grade(schoolClass.getGrade())
+                .section(schoolClass.getSection())
+                .description(schoolClass.getDescription())
+                .capacity(schoolClass.getCapacity())
+                .classTeacherName(schoolClass.getClassTeacherName())
+                .active(schoolClass.isActive())
+                .createdAt(schoolClass.getCreatedAt())
+                .updatedAt(schoolClass.getUpdatedAt())
+                .build();
+    }
+
     public static PeriodSlotResponse toPeriodSlotResponse(PeriodSlot slot) {
         return PeriodSlotResponse.builder()
                 .id(slot.getId())

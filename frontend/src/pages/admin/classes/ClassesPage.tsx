@@ -1,63 +1,45 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
-import { subjectApi } from '../../../api/subjectApi'
+import { classApi } from '../../../api/classApi'
 import { Button, DataTable } from '../../../components/ui'
 import { useServerList } from '../../../hooks/useServerList'
 import { useToast } from '../../../context/ToastContext'
-import SubjectFormModal from './SubjectFormModal'
-import type { Subject, SubjectForm } from '../../../types/subject'
+import ClassFormModal from './ClassFormModal'
+import type { ClassForm, SchoolClass } from '../../../types/class'
 
-const emptyForm: SubjectForm = {
-  subjectName: '',
-  subjectCode: '',
-  subjectType: '',
+const emptyForm: ClassForm = {
+  grade: '',
+  section: '',
+  description: '',
+  capacity: '',
+  classTeacherName: '',
   active: true,
 }
 
-const randomCodeDigits = () => Math.floor(1000 + Math.random() * 9000).toString()
-
-const subjectCodePrefix = (subjectName: string) => {
-  const letters = subjectName.replace(/[^a-zA-Z]/g, '').toUpperCase()
-  if (!letters) return ''
-  return `${letters.slice(0, 2)}${letters.slice(-1)}`
-}
-
-export default function SubjectsPage() {
+export default function ClassesPage() {
   const { t } = useTranslation()
   const { showToast } = useToast()
-  const [form, setForm] = useState<SubjectForm>(emptyForm)
+  const [form, setForm] = useState<ClassForm>(emptyForm)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
 
   const fetcher = useCallback(
-    (query: { page?: number; size?: number; search?: string }) => subjectApi.list(query),
+    (query: { page?: number; size?: number; search?: string }) => classApi.list(query),
     []
   )
-  const list = useServerList<Subject>(fetcher)
+  const list = useServerList<SchoolClass>(fetcher)
 
   useEffect(() => {
     if (list.error) showToast(list.error, 'error')
   }, [list.error, showToast])
 
-  const onChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const onChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = event.target
-    setForm((previous) => {
-      if (name === 'subjectName') {
-        const prefix = subjectCodePrefix(value)
-        const existingDigits = previous.subjectCode.match(/\d{4}$/)?.[0] || randomCodeDigits()
-        return {
-          ...previous,
-          subjectName: value,
-          subjectCode: prefix ? `${prefix}${existingDigits}` : '',
-        }
-      }
-
-      return {
-        ...previous,
-        [name]: name === 'active' ? value === 'true' : value,
-      }
-    })
+    setForm((previous) => ({
+      ...previous,
+      [name]: name === 'capacity' ? (value === '' ? '' : Number(value)) : name === 'active' ? value === 'true' : value,
+    }))
   }
 
   const startCreate = () => {
@@ -66,49 +48,61 @@ export default function SubjectsPage() {
     setShowForm(true)
   }
 
-  const startEdit = (subject: Subject) => {
-    setEditingId(subject.id)
+  const startEdit = (schoolClass: SchoolClass) => {
+    setEditingId(schoolClass.id)
     setForm({
-      subjectName: subject.subjectName || '',
-      subjectCode: subject.subjectCode || '',
-      subjectType: subject.subjectType || '',
-      active: subject.active,
+      grade: schoolClass.grade,
+      section: schoolClass.section,
+      description: schoolClass.description || '',
+      capacity: schoolClass.capacity ?? '',
+      classTeacherName: schoolClass.classTeacherName || '',
+      active: schoolClass.active,
     })
     setShowForm(true)
   }
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    if (!form.grade || !form.section) {
+      showToast(t('class.validation.gradeSectionRequired'), 'error')
+      return
+    }
+
+    const payload = {
+      grade: form.grade,
+      section: form.section,
+      description: form.description,
+      capacity: form.capacity === '' ? null : Number(form.capacity),
+      classTeacherName: form.classTeacherName,
+      active: form.active,
+    }
 
     try {
       if (editingId) {
-        await subjectApi.update(editingId, {
-          subjectName: form.subjectName,
-          subjectCode: form.subjectCode,
-          subjectType: form.subjectType,
-          active: form.active,
-        })
+        await classApi.update(editingId, payload)
         showToast(t('common.updated'), 'success')
       } else {
-        await subjectApi.create({
-          ...form,
-        })
+        await classApi.create(payload)
         showToast(t('common.created'), 'success')
       }
-
       setShowForm(false)
       setForm(emptyForm)
       list.reload()
     } catch (error: any) {
-      showToast(error.response?.data?.message || t('common.error'), 'error')
+      const message = error.response?.data?.message
+      showToast(
+        message === 'A class with this grade and section already exists'
+          ? t('class.validation.duplicate')
+          : message || t('common.error'),
+        'error'
+      )
     }
   }
 
   const onDelete = async (id: number) => {
     if (!window.confirm(t('common.confirmDelete'))) return
-
     try {
-      await subjectApi.remove(id)
+      await classApi.remove(id)
       showToast(t('common.deleted', 'Deleted successfully'), 'success')
       list.reload()
     } catch (error: any) {
@@ -118,23 +112,24 @@ export default function SubjectsPage() {
 
   const columns = useMemo(
     () => [
-      { key: 'subjectName', label: t('subject.subjectName') },
-      { key: 'subjectCode', label: t('subject.subjectCode') },
-      { key: 'subjectType', label: t('subject.subjectType') },
+      { key: 'grade', label: t('class.fields.grade'), render: (schoolClass: SchoolClass) => `${schoolClass.grade} ${schoolClass.section}` },
+      { key: 'classTeacherName', label: t('class.fields.classTeacherName') },
+      { key: 'capacity', label: t('class.fields.capacity') },
+      { key: 'description', label: t('class.fields.description') },
       {
         key: 'active',
-        label: t('common.active'),
-        render: (subject: Subject) => (subject.active ? t('common.active') : t('common.inactive')),
+        label: t('class.fields.status'),
+        render: (schoolClass: SchoolClass) => (schoolClass.active ? t('common.active') : t('common.inactive')),
       },
       {
         key: 'actions',
         label: t('common.actions'),
-        render: (subject: Subject) => (
+        render: (schoolClass: SchoolClass) => (
           <div className="ui-action-group">
-            <Button type="button" variant="secondary" size="sm" onClick={() => startEdit(subject)}>
+            <Button type="button" variant="secondary" size="sm" onClick={() => startEdit(schoolClass)}>
               {t('common.manage')}
             </Button>
-            <Button type="button" variant="danger" size="sm" onClick={() => onDelete(subject.id)}>
+            <Button type="button" variant="danger" size="sm" onClick={() => onDelete(schoolClass.id)}>
               {t('common.delete')}
             </Button>
           </div>
@@ -147,13 +142,13 @@ export default function SubjectsPage() {
   return (
     <div className="fade-in">
       <div className="section-head">
-        <h1 className="text-2xl sm:text-3xl">{t('nav.subjects')}</h1>
+        <h1 className="text-2xl sm:text-3xl">{t('nav.classes')}</h1>
         <Button className="w-full sm:w-auto" onClick={startCreate}>
-          {t('subject.add')}
+          {t('class.add')}
         </Button>
       </div>
 
-      <SubjectFormModal
+      <ClassFormModal
         open={showForm}
         editingId={editingId}
         form={form}
@@ -166,7 +161,7 @@ export default function SubjectsPage() {
         <DataTable
           columns={columns}
           data={list.content}
-          getRowKey={(subject) => subject.id}
+          getRowKey={(schoolClass) => schoolClass.id}
           emptyMessage={list.search ? t('common.noResults') : t('common.emptyTableMessage')}
           searchable
           searchValue={list.search}

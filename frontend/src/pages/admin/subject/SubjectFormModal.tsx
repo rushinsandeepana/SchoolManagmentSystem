@@ -5,13 +5,9 @@ import { Button, InputField, SelectField } from '../../../components/ui'
 import type { SubjectForm } from '../../../types/subject'
 
 const subjectOptions = [
-  { value: 'mandatory', label: 'Mandatory' },
-  { value: 'optional', label: 'Optional' },
-]
-
-const statusOptions = [
-  { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Inactive' },
+  { value: '', label: 'Select subject type' },
+  { value: 'MANDATORY', label: 'Mandatory' },
+  { value: 'OPTIONAL', label: 'Optional' },
 ]
 
 type SubjectFormModalProps = {
@@ -43,6 +39,7 @@ export default function SubjectFormModal({
             value={form.subjectName}
             onChange={onChange}
             placeholder={t('subject.placeholders.name')}
+            title={t('validation.subjectNameRequired')}
             required
           />
 
@@ -52,6 +49,9 @@ export default function SubjectFormModal({
             value={form.subjectCode}
             onChange={onChange}
             placeholder={t('subject.placeholders.code')}
+            title={t('validation.subjectCodeRequired')}
+            disabled
+            readOnly
             required
           />
 
@@ -60,16 +60,11 @@ export default function SubjectFormModal({
             name="subjectType"
             value={form.subjectType}
             onChange={onChange}
+            required
+            title={t('validation.subjectTypeRequired')}
             options={subjectOptions}
           />
 
-          <SelectField
-            label={t('subject.fields.status')}
-            name="active"
-            value={String(form.active)}
-            onChange={onChange}
-            options={statusOptions}
-          />
         </div>
 
         <div className="ui-form__actions">

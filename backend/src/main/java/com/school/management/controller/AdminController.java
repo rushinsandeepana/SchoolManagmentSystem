@@ -49,7 +49,7 @@ public class AdminController {
     }
 
     @PutMapping("/teachers/{id}")
-    public UserResponse updateTeacher(@PathVariable Long id, @RequestBody UpdateTeacherRequest request) {
+    public UserResponse updateTeacher(@PathVariable Long id, @Valid @RequestBody UpdateTeacherRequest request) {
         return teacherService.updateTeacher(id, request);
     }
 

@@ -417,6 +417,10 @@
     @apply text-sm text-muted;
   }
 
+  .required-mark {
+    @apply font-semibold text-red-600;
+  }
+
   .ui-input,
   .ui-select,
   .input {

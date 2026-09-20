@@ -21,6 +21,7 @@ export default function Layout() {
           { to: '/admin/teachers', label: t('nav.teachers') },
           { to: '/admin/periods', label: t('nav.assignPeriods') },
           { to: '/admin/subjects', label: t('nav.subjects') },
+          { to: '/admin/classes', label: t('nav.classes') },
           { to: '/notes', label: t('nav.notes') },
           { to: '/change-password', label: t('nav.changePassword') },
         ]

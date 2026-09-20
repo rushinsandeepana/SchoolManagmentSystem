@@ -8,6 +8,7 @@
     "teachers": "Teachers",
     "assignPeriods": "Assign Periods",
     "subjects": "Subjects",
+    "classes": "Classes",
     "notes": "Notes",
     "changePassword": "Change Password",
     "mySchedule": "My Schedule"
@@ -60,6 +61,23 @@
     "showingRange": "Showing {{from}}–{{to}} of {{total}}",
     "noResults": "No matching results"
   },
+  "validation": {
+    "teacherRequired": "Teacher is required",
+    "usernameRequired": "Username is required",
+    "passwordRequired": "Password is required",
+    "fullNameRequired": "Full name is required",
+    "currentPasswordRequired": "Current password is required",
+    "newPasswordRequired": "New password is required",
+    "subjectNameRequired": "Subject name is required",
+    "subjectCodeRequired": "Subject code is required",
+    "noteTitleRequired": "Note title is required",
+    "noteContentRequired": "Note content is required",
+    "dayRequired": "Day is required",
+    "periodRequired": "Period is required",
+    "periodTypeRequired": "Period type is required",
+    "subjectTypeRequired": "Subject type is required",
+    "statusRequired": "Status is required"
+  },
   "dashboard": {
     "title": "Dashboard",
     "totalTeachers": "Total Teachers",
@@ -98,6 +116,28 @@
     "placeholders": {
       "name": "Enter subject name",
       "code": "Enter subject code"
+    }
+  },
+  "class": {
+    "add": "Add Class",
+    "edit": "Edit Class",
+    "gradeOption": "Grade {{grade}}",
+    "fields": {
+      "grade": "Grade",
+      "section": "Section",
+      "description": "Description",
+      "capacity": "Capacity",
+      "classTeacherName": "Class Teacher",
+      "status": "Status"
+    },
+    "placeholders": {
+      "description": "Enter class description",
+      "capacity": "Enter student capacity",
+      "classTeacherName": "Enter class teacher name"
+    },
+    "validation": {
+      "gradeSectionRequired": "Grade and section are required",
+      "duplicate": "This grade and section already exists"
     }
   },
   "schedule": {

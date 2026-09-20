@@ -52,6 +52,7 @@ export default function AssignPeriodFormModal({
             value={teacherId}
             onChange={(event: { target: { value: string } }) => setTeacherId(event.target.value)}
             required
+            title={t('validation.teacherRequired')}
             options={teachers.map((teacher) => ({
               value: teacher.id,
               label: teacher.fullName,
@@ -63,6 +64,8 @@ export default function AssignPeriodFormModal({
             name="dayOfWeek"
             value={form.dayOfWeek}
             onChange={onChange}
+            required
+            title={t('validation.dayRequired')}
             options={DAYS.map((day) => ({
               value: day,
               label: t(day),
@@ -74,6 +77,8 @@ export default function AssignPeriodFormModal({
             name="periodNumber"
             value={form.periodNumber}
             onChange={onChange}
+            required
+            title={t('validation.periodRequired')}
             options={Array.from({ length: 8 }, (_, index) => ({
               value: index + 1,
               label: `P${index + 1}`,
@@ -85,6 +90,8 @@ export default function AssignPeriodFormModal({
             name="periodType"
             value={form.periodType}
             onChange={onChange}
+            required
+            title={t('validation.periodTypeRequired')}
             options={TYPES.map((type) => ({
               value: type,
               label: t(type.toLowerCase()),

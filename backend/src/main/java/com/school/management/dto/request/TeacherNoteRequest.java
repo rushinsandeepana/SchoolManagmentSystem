@@ -6,12 +6,12 @@ import lombok.Data;
 
 @Data
 public class TeacherNoteRequest {
-    @NotNull
+    @NotNull(message = "Teacher is required")
     private Long teacherId;
 
-    @NotBlank
+    @NotBlank(message = "Note title is required")
     private String title;
 
-    @NotBlank
+    @NotBlank(message = "Note content is required")
     private String content;
 }

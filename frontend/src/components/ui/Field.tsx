@@ -1,9 +1,10 @@
 export function InputField({ label, className = '', ...props }) {
   const fieldClass = className ? `ui-input ${className}` : 'ui-input'
+  const isRequired = Boolean(props.required)
 
   return (
     <label className="ui-field">
-      {label && <span className="ui-field__label">{label}</span>}
+      {label && <span className="ui-field__label">{label}{isRequired && <span className="required-mark"> *</span>}</span>}
       <input className={fieldClass} {...props} />
     </label>
   )
@@ -11,10 +12,11 @@ export function InputField({ label, className = '', ...props }) {
 
 export function SelectField({ label, options, className = '', ...props }) {
   const selectClass = className ? `ui-select ${className}` : 'ui-select'
+  const isRequired = Boolean(props.required)
 
   return (
     <label className="ui-field">
-      {label && <span className="ui-field__label">{label}</span>}
+      {label && <span className="ui-field__label">{label}{isRequired && <span className="required-mark"> *</span>}</span>}
       <select className={selectClass} {...props}>
         {options.map((option) => (
           <option key={String(option.value)} value={option.value}>

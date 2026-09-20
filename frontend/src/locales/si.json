@@ -8,6 +8,7 @@
     "teachers": "ගුරුවරුන්",
     "assignPeriods": "කාලපරිච්ඡේද පැවරීම",
     "subjects": "විෂයයන්",
+    "classes": "පන්ති",
     "notes": "සටහන්",
     "changePassword": "මුරපදය වෙනස් කරන්න",
     "mySchedule": "මගේ කාලසටහන"
@@ -60,6 +61,23 @@
     "showingRange": "{{total}} න් {{from}}–{{to}} පෙන්වයි",
     "noResults": "ගැලපෙන ප්‍රතිඵල නැත"
   },
+  "validation": {
+    "teacherRequired": "ගුරුවරයා අවශ්‍යයි",
+    "usernameRequired": "පරිශීලක නාමය අවශ්‍යයි",
+    "passwordRequired": "මුරපදය අවශ්‍යයි",
+    "fullNameRequired": "සම්පූර්ණ නම අවශ්‍යයි",
+    "currentPasswordRequired": "වත්මන් මුරපදය අවශ්‍යයි",
+    "newPasswordRequired": "නව මුරපදය අවශ්‍යයි",
+    "subjectNameRequired": "විෂය නම අවශ්‍යයි",
+    "subjectCodeRequired": "විෂය කේතය අවශ්‍යයි",
+    "noteTitleRequired": "සටහන් මාතෘකාව අවශ්‍යයි",
+    "noteContentRequired": "සටහන් අන්තර්ගතය අවශ්‍යයි",
+    "dayRequired": "දිනය අවශ්‍යයි",
+    "periodRequired": "කාලපරිච්ඡේදය අවශ්‍යයි",
+    "periodTypeRequired": "කාලපරිච්ඡේද වර්ගය අවශ්‍යයි",
+    "subjectTypeRequired": "විෂය වර්ගය අවශ්‍යයි",
+    "statusRequired": "තත්ත්වය අවශ්‍යයි"
+  },
   "dashboard": {
     "title": "උපකරණ පුවරුව",
     "totalTeachers": "මුළු ගුරුවරුන්",
@@ -98,6 +116,28 @@
     "placeholders": {
       "name": "විෂය නම ඇතුළත් කරන්න",
       "code": "විෂය කේතය ඇතුළත් කරන්න"
+    }
+  },
+  "class": {
+    "add": "පන්තිය එකතු කරන්න",
+    "edit": "පන්තිය සංස්කරණය",
+    "gradeOption": "{{grade}} ශ්‍රේණිය",
+    "fields": {
+      "grade": "ශ්‍රේණිය",
+      "section": "අංශය",
+      "description": "විස්තරය",
+      "capacity": "ධාරිතාව",
+      "classTeacherName": "පන්ති ගුරුවරයා",
+      "status": "තත්ත්වය"
+    },
+    "placeholders": {
+      "description": "පන්ති විස්තරය ඇතුළත් කරන්න",
+      "capacity": "ශිෂ්‍ය ධාරිතාව ඇතුළත් කරන්න",
+      "classTeacherName": "පන්ති ගුරුවරයාගේ නම ඇතුළත් කරන්න"
+    },
+    "validation": {
+      "gradeSectionRequired": "ශ්‍රේණිය සහ අංශය අවශ්‍යයි",
+      "duplicate": "මෙම ශ්‍රේණිය සහ අංශය දැනටමත් පවතී"
     }
   },
   "schedule": {

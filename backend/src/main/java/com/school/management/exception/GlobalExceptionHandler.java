@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -34,6 +35,14 @@ public class GlobalExceptionHandler {
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining(", "));
+        return ResponseEntity.badRequest().body(new ApiMessage(message));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiMessage> handleUnreadableMessage(HttpMessageNotReadableException ex) {
+        String message = ex.getMessage() != null && ex.getMessage().contains("SubjectType")
+                ? "Subject type is required and must be MANDATORY or OPTIONAL"
+                : "Request contains invalid or missing values";
         return ResponseEntity.badRequest().body(new ApiMessage(message));
     }
 

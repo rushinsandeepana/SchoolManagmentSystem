@@ -54,6 +54,7 @@ export default function TeacherFormModal({
               value={form.username}
               onChange={onChange}
               placeholder={t('auth.placeholders.username')}
+              title={t('validation.usernameRequired')}
               required
             />
           )}
@@ -66,6 +67,7 @@ export default function TeacherFormModal({
             onChange={onChange}
             required={!editingId}
             placeholder={t('auth.placeholders.password')}
+            title={t('validation.passwordRequired')}
           />
 
           <InputField
@@ -74,6 +76,7 @@ export default function TeacherFormModal({
             value={form.fullName}
             onChange={onChange}
             placeholder={t('teacher.placeholders.fullName')}
+            title={t('validation.fullNameRequired')}
             required
           />
 

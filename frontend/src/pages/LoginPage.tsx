@@ -65,22 +65,24 @@ export default function LoginPage() {
           {error && <div className="alert alert-error">{error}</div>}
           <form className="form" onSubmit={onSubmit}>
             <label>
-              {t('auth.username')}
+              {t('auth.username')}<span className="required-mark"> *</span>
               <input
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder={t('auth.placeholders.username')}
+                title={t('validation.usernameRequired')}
                 autoComplete="username"
                 required
               />
             </label>
             <label>
-              {t('auth.password')}
+              {t('auth.password')}<span className="required-mark"> *</span>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={t('auth.placeholders.password')}
+                title={t('validation.passwordRequired')}
                 autoComplete="current-password"
                 required
               />
