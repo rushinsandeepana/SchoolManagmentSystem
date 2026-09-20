@@ -66,9 +66,13 @@
     "usernameRequired": "Username is required",
     "passwordRequired": "Password is required",
     "fullNameRequired": "Full name is required",
+    "emailRequired": "Email is required",
+    "subjectRequired": "At least one subject is required",
+    "usernameDuplicate": "Username already exists",
     "currentPasswordRequired": "Current password is required",
     "newPasswordRequired": "New password is required",
     "subjectNameRequired": "Subject name is required",
+    "subjectNameDuplicate": "Subject name already exists",
     "subjectCodeRequired": "Subject code is required",
     "noteTitleRequired": "Note title is required",
     "noteContentRequired": "Note content is required",
@@ -93,11 +97,11 @@
     "fullName": "Full Name",
     "email": "Email",
     "subject": "Subject",
-    "performanceScore": "Performance Score",
+    "status": "Status",
     "placeholders": {
       "fullName": "Enter full name",
       "email": "Enter email address",
-      "performanceScore": "Enter score (0-100)"
+      "subject": "Search subjects"
     }
   },
   "subject": {

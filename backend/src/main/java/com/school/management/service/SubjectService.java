@@ -26,13 +26,17 @@ public class SubjectService {
 
     @Transactional
     public SubjectResponse createSubject(CreateSubjectRequest request) {
+        String name = request.getSubjectName().trim();
         String code = request.getSubjectCode().trim();
+        if (subjectRepository.existsBySubjectNameIgnoreCase(name)) {
+            throw new BadRequestException("Subject name already exists");
+        }
         if (subjectRepository.existsBySubjectCodeIgnoreCase(code)) {
             throw new BadRequestException("Subject code already exists");
         }
 
         Subject subject = Subject.builder()
-                .subjectName(request.getSubjectName().trim())
+                .subjectName(name)
                 .subjectCode(code)
                 .subjectType(request.getSubjectType())
                 .active(request.getActive())
@@ -53,11 +57,15 @@ public class SubjectService {
     @Transactional
     public SubjectResponse updateSubject(Long id, UpdateSubjectRequest request) {
         Subject subject = requireSubject(id);
+        String name = request.getSubjectName().trim();
         String code = request.getSubjectCode().trim();
+        if (subjectRepository.existsBySubjectNameIgnoreCaseAndIdNot(name, id)) {
+            throw new BadRequestException("Subject name already exists");
+        }
         if (subjectRepository.existsBySubjectCodeIgnoreCaseAndIdNot(code, id)) {
             throw new BadRequestException("Subject code already exists");
         }
-        subject.setSubjectName(request.getSubjectName().trim());
+        subject.setSubjectName(name);
         subject.setSubjectCode(code);
         subject.setSubjectType(request.getSubjectType());
         subject.setActive(request.getActive());

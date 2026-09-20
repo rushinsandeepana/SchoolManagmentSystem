@@ -29,6 +29,7 @@ export default function SubjectsPage() {
   const [form, setForm] = useState<SubjectForm>(emptyForm)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [errors, setErrors] = useState<Partial<Record<keyof SubjectForm, string>>>({})
 
   const fetcher = useCallback(
     (query: { page?: number; size?: number; search?: string }) => subjectApi.list(query),
@@ -42,6 +43,12 @@ export default function SubjectsPage() {
 
   const onChange = (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = event.target
+    setErrors((previous) => {
+      if (!(name in previous)) return previous
+      const next = { ...previous }
+      delete next[name as keyof SubjectForm]
+      return next
+    })
     setForm((previous) => {
       if (name === 'subjectName') {
         const prefix = subjectCodePrefix(value)
@@ -63,6 +70,7 @@ export default function SubjectsPage() {
   const startCreate = () => {
     setEditingId(null)
     setForm(emptyForm)
+    setErrors({})
     setShowForm(true)
   }
 
@@ -74,11 +82,27 @@ export default function SubjectsPage() {
       subjectType: subject.subjectType || '',
       active: subject.active,
     })
+    setErrors({})
     setShowForm(true)
   }
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    const nextErrors: Partial<Record<keyof SubjectForm, string>> = {}
+    if (!form.subjectName.trim()) nextErrors.subjectName = t('validation.subjectNameRequired')
+    if (!form.subjectCode.trim()) nextErrors.subjectCode = t('validation.subjectCodeRequired')
+    if (!form.subjectType) nextErrors.subjectType = t('validation.subjectTypeRequired')
+
+    const duplicate = list.content.some(
+      (subject) =>
+        subject.id !== editingId &&
+        subject.subjectName.trim().toLowerCase() === form.subjectName.trim().toLowerCase()
+    )
+    if (duplicate) nextErrors.subjectName = t('validation.subjectNameDuplicate')
+
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) return
 
     try {
       if (editingId) {
@@ -98,9 +122,14 @@ export default function SubjectsPage() {
 
       setShowForm(false)
       setForm(emptyForm)
+      setErrors({})
       list.reload()
     } catch (error: any) {
-      showToast(error.response?.data?.message || t('common.error'), 'error')
+      const message = error.response?.data?.message || t('common.error')
+      if (message.toLowerCase().includes('subject name')) {
+        setErrors({ subjectName: message })
+      }
+      showToast(message, 'error')
     }
   }
 
@@ -157,6 +186,7 @@ export default function SubjectsPage() {
         open={showForm}
         editingId={editingId}
         form={form}
+        errors={errors}
         onChange={onChange}
         onSubmit={onSubmit}
         onClose={() => setShowForm(false)}

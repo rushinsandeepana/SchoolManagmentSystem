@@ -12,6 +12,10 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
 
     boolean existsBySubjectCodeIgnoreCaseAndIdNot(String subjectCode, Long id);
 
+    boolean existsBySubjectNameIgnoreCase(String subjectName);
+
+    boolean existsBySubjectNameIgnoreCaseAndIdNot(String subjectName, Long id);
+
     @Query("""
             SELECT s FROM Subject s
             WHERE :search IS NULL OR :search = ''

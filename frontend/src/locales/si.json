@@ -66,9 +66,13 @@
     "usernameRequired": "පරිශීලක නාමය අවශ්‍යයි",
     "passwordRequired": "මුරපදය අවශ්‍යයි",
     "fullNameRequired": "සම්පූර්ණ නම අවශ්‍යයි",
+    "emailRequired": "විද්‍යුත් තැපෑල අවශ්‍යයි",
+    "subjectRequired": "අවම වශයෙන් එක් විෂයක් අවශ්‍යයි",
+    "usernameDuplicate": "පරිශීලක නාමය දැනටමත් පවතී",
     "currentPasswordRequired": "වත්මන් මුරපදය අවශ්‍යයි",
     "newPasswordRequired": "නව මුරපදය අවශ්‍යයි",
     "subjectNameRequired": "විෂය නම අවශ්‍යයි",
+    "subjectNameDuplicate": "විෂය නම දැනටමත් පවතී",
     "subjectCodeRequired": "විෂය කේතය අවශ්‍යයි",
     "noteTitleRequired": "සටහන් මාතෘකාව අවශ්‍යයි",
     "noteContentRequired": "සටහන් අන්තර්ගතය අවශ්‍යයි",
@@ -93,11 +97,11 @@
     "fullName": "සම්පූර්ණ නම",
     "email": "විද්‍යුත් තැපෑල",
     "subject": "විෂය",
-    "performanceScore": "කාර්යසාධන ලකුණු",
+    "status": "තත්ත්වය",
     "placeholders": {
       "fullName": "සම්පූර්ණ නම ඇතුළත් කරන්න",
       "email": "විද්‍යුත් තැපැල් ලිපිනය ඇතුළත් කරන්න",
-      "performanceScore": "ලකුණු ඇතුළත් කරන්න (0-100)"
+      "subject": "විෂය සොයන්න"
     }
   },
   "subject": {

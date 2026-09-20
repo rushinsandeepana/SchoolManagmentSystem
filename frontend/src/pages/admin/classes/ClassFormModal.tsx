@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { ChangeEvent, FormEvent } from 'react'
 import Modal from '../../../components/Modal'
-import { Button, InputField, SelectField } from '../../../components/ui'
+import { Button, InputField, OptionGroup, SelectField } from '../../../components/ui'
 import type { ClassForm } from '../../../types/class'
 
 type ClassFormModalProps = {
@@ -31,47 +31,29 @@ export default function ClassFormModal({
   const { t } = useTranslation()
 
   const selectToggle = (name: 'grade' | 'section', value: string) => {
-    onChange({ target: { name, value } } as ChangeEvent<HTMLSelectElement>)
+    onChange({ target: { name, value } } as ChangeEvent<HTMLInputElement>)
   }
 
   return (
     <Modal open={open} title={editingId ? t('class.edit') : t('class.add')} onClose={onClose}>
       <form className="ui-form" onSubmit={onSubmit}>
-        <div className="ui-field">
-          <span className="ui-field__label">{t('class.fields.grade')}<span className="required-mark"> *</span></span>
-          <div className="ui-multiselect" role="group" aria-label={t('class.fields.grade')}>
-            {grades.map((grade) => (
-              <button
-                key={grade}
-                type="button"
-                className={`ui-multiselect__option ${form.grade === grade ? 'selected' : ''}`.trim()}
-                onClick={() => selectToggle('grade', grade)}
-                aria-pressed={form.grade === grade}
-              >
-                {t('class.gradeOption', { grade })}
-              </button>
-            ))}
-          </div>
-          <input name="grade" value={form.grade} required readOnly hidden aria-hidden="true" />
-        </div>
+        <OptionGroup
+          name="grade"
+          label={t('class.fields.grade')}
+          options={grades.map((grade) => ({ value: grade, label: t('class.gradeOption', { grade }) }))}
+          value={form.grade}
+          onChange={(value) => selectToggle('grade', value)}
+          required
+        />
 
-        <div className="ui-field">
-          <span className="ui-field__label">{t('class.fields.section')}<span className="required-mark"> *</span></span>
-          <div className="ui-multiselect" role="group" aria-label={t('class.fields.section')}>
-            {sections.map((section) => (
-              <button
-                key={section}
-                type="button"
-                className={`ui-multiselect__option ${form.section === section ? 'selected' : ''}`.trim()}
-                onClick={() => selectToggle('section', section)}
-                aria-pressed={form.section === section}
-              >
-                {section}
-              </button>
-            ))}
-          </div>
-          <input name="section" value={form.section} required readOnly hidden aria-hidden="true" />
-        </div>
+        <OptionGroup
+          name="section"
+          label={t('class.fields.section')}
+          options={sections.map((section) => ({ value: section, label: section }))}
+          value={form.section}
+          onChange={(value) => selectToggle('section', value)}
+          required
+        />
 
         <div className="ui-form__grid ui-form__grid--2">
           <InputField

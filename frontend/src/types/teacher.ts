@@ -13,7 +13,6 @@ export type TeacherForm = {
   password: string
   fullName: string
   email: string
-  subject: string
-  performanceScore: number
+  subject: string[]
   active: boolean
 }

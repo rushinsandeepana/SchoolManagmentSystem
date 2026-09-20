@@ -14,6 +14,7 @@ type SubjectFormModalProps = {
   open: boolean
   editingId?: string | number | null
   form: SubjectForm
+  errors: Partial<Record<keyof SubjectForm, string>>
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onClose: () => void
@@ -23,6 +24,7 @@ export default function SubjectFormModal({
   open,
   editingId,
   form,
+  errors,
   onChange,
   onSubmit,
   onClose,
@@ -31,7 +33,7 @@ export default function SubjectFormModal({
 
   return (
     <Modal open={open} title={editingId ? t('subject.edit') : t('subject.add')} onClose={onClose}>
-      <form className="ui-form" onSubmit={onSubmit}>
+      <form className="ui-form" onSubmit={onSubmit} noValidate>
         <div className="ui-form__grid ui-form__grid--2">
           <InputField
             label={t('subject.fields.subjectName')}
@@ -40,6 +42,7 @@ export default function SubjectFormModal({
             onChange={onChange}
             placeholder={t('subject.placeholders.name')}
             title={t('validation.subjectNameRequired')}
+            error={errors.subjectName}
             required
           />
 
@@ -50,6 +53,7 @@ export default function SubjectFormModal({
             onChange={onChange}
             placeholder={t('subject.placeholders.code')}
             title={t('validation.subjectCodeRequired')}
+            error={errors.subjectCode}
             disabled
             readOnly
             required
@@ -62,6 +66,7 @@ export default function SubjectFormModal({
             onChange={onChange}
             required
             title={t('validation.subjectTypeRequired')}
+            error={errors.subjectType}
             options={subjectOptions}
           />
 

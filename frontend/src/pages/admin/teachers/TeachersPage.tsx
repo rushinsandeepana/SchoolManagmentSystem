@@ -2,19 +2,20 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { teacherApi } from '../../../api/teacherApi'
+import { subjectApi } from '../../../api/subjectApi'
 import { Button, DataTable } from '../../../components/ui'
 import { useServerList } from '../../../hooks/useServerList'
 import { useToast } from '../../../context/ToastContext'
 import TeacherFormModal from './TeacherFormModal'
 import type { Teacher, TeacherForm } from '../../../types/teacher'
+import type { Subject } from '../../../types/subject'
 
 const emptyForm: TeacherForm = {
   username: '',
   password: '',
   fullName: '',
   email: '',
-  subject: '',
-  performanceScore: 70,
+  subject: [],
   active: true,
 }
 
@@ -24,6 +25,8 @@ export default function TeachersPage() {
   const [form, setForm] = useState(emptyForm)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [errors, setErrors] = useState<Partial<Record<keyof TeacherForm, string>>>({})
 
   const fetcher = useCallback(
     (query: { page?: number; size?: number; search?: string }) => teacherApi.list(query),
@@ -32,17 +35,36 @@ export default function TeachersPage() {
 
   const list = useServerList<Teacher>(fetcher)
 
+  useEffect(() => {
+    subjectApi.list({ page: 0, size: 100 }).then((res) => {
+      setSubjects((res.data.content || []).filter((subject: Subject) => subject.active))
+    }).catch((err) => {
+      showToast(err.response?.data?.message || t('common.error'), 'error')
+    })
+  }, [showToast, t])
+
   // Show list-level errors as toasts
   useEffect(() => {
     if (list.error) showToast(list.error, 'error')
   }, [list.error, showToast])
 
-  const onChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
+  const onChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setErrors((previous) => {
+      if (!(e.target.name in previous)) return previous
+      const next = { ...previous }
+      delete next[e.target.name as keyof TeacherForm]
+      return next
+    })
+    setForm((f) => ({
+      ...f,
+      [e.target.name]: e.target.name === 'active' ? e.target.value === 'true' : e.target.value,
+    }))
+  }
 
   const startCreate = () => {
     setEditingId(null)
     setForm(emptyForm)
+    setErrors({})
     setShowForm(true)
   }
 
@@ -53,23 +75,39 @@ export default function TeachersPage() {
       password: '',
       fullName: teacher.fullName || '',
       email: teacher.email || '',
-      subject: teacher.subject || '',
-      performanceScore: teacher.performanceScore ?? 0,
+      subject: teacher.subject ? teacher.subject.split(',').map((subject) => subject.trim()).filter(Boolean) : [],
       active: teacher.active,
     })
+    setErrors({})
     setShowForm(true)
   }
 
   const onSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
 
+    const nextErrors: Partial<Record<keyof TeacherForm, string>> = {}
+    if (!form.username.trim()) nextErrors.username = t('validation.usernameRequired')
+    if (!editingId && !form.password.trim()) nextErrors.password = t('validation.passwordRequired')
+    if (!form.fullName.trim()) nextErrors.fullName = t('validation.fullNameRequired')
+    if (!form.subject.length) nextErrors.subject = t('validation.subjectRequired')
+    if (form.active === undefined) nextErrors.active = t('validation.statusRequired')
+
+    const duplicate = list.content.some(
+      (subject) =>
+        subject.id !== editingId &&
+        subject.username.trim().toLowerCase() === form.username.trim().toLowerCase()
+    )
+    if (duplicate) nextErrors.username = t('validation.usernameDuplicate')
+
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) return
+
     try {
       if (editingId) {
         await teacherApi.update(editingId, {
           fullName: form.fullName,
           email: form.email,
-          subject: form.subject,
-          performanceScore: Number(form.performanceScore),
+          subject: form.subject.join(', '),
           active: form.active,
           password: form.password || undefined,
         })
@@ -77,13 +115,14 @@ export default function TeachersPage() {
       } else {
         await teacherApi.create({
           ...form,
-          performanceScore: Number(form.performanceScore),
+          subject: form.subject.join(', '),
         })
         showToast(t('common.created'), 'success')
       }
 
       setShowForm(false)
       setForm(emptyForm)
+      setErrors({})
       list.reload()
     } catch (err: any) {
       showToast(err.response?.data?.message || t('common.error'), 'error')
@@ -106,11 +145,6 @@ export default function TeachersPage() {
       { key: 'fullName', label: t('teacher.fullName') },
       { key: 'username', label: t('auth.username') },
       { key: 'subject', label: t('teacher.subject') },
-      {
-        key: 'performanceScore',
-        label: t('teacher.performanceScore'),
-        render: (teacher: Teacher) => `${teacher.performanceScore ?? 0}%`,
-      },
       {
         key: 'active',
         label: t('common.active'),
@@ -147,8 +181,12 @@ export default function TeachersPage() {
         open={showForm}
         editingId={editingId}
         form={form}
+        errors={errors}
+        subjectOptions={subjects
+          .slice()
+          .sort((first, second) => first.subjectName.localeCompare(second.subjectName))
+          .map((subject) => ({ value: subject.subjectName, label: subject.subjectName }))}
         onChange={onChange}
-        onToggleActive={() => setForm((f) => ({ ...f, active: !f.active }))}
         onSubmit={onSubmit}
         onClose={() => setShowForm(false)}
       />
