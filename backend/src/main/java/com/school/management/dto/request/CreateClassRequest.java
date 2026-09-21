@@ -22,8 +22,7 @@ public class CreateClassRequest {
     @Min(value = 0, message = "Capacity cannot be negative")
     private Integer capacity;
 
-    @Size(max = 120, message = "Class teacher name must not exceed 120 characters")
-    private String classTeacherName;
+    private Long classTeacherId;
 
     @NotNull(message = "Status is required")
     private Boolean active;

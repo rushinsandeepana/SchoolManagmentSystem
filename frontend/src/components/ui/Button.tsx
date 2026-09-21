@@ -1,3 +1,10 @@
+import type { ButtonHTMLAttributes } from 'react'
+
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: string
+  size?: string
+}
+
 export default function Button({
   type = 'button',
   variant = 'primary',
@@ -5,7 +12,7 @@ export default function Button({
   className = '',
   children,
   ...props
-}) {
+}: ButtonProps) {
   const classes = [
     'ui-button',
     `ui-button--${variant}`,

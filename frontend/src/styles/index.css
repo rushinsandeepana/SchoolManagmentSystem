@@ -98,6 +98,13 @@
     color: var(--text);
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    scrollbar-width: none;
+  }
+
+  body::-webkit-scrollbar,
+  main::-webkit-scrollbar,
+  aside::-webkit-scrollbar {
+    display: none;
   }
 
   a {
@@ -236,6 +243,10 @@
 
   .form-row {
     @apply grid gap-3;
+  }
+
+  .form-row > * {
+    min-width: 0;
   }
 
   .form-row.cols-2 {
@@ -433,6 +444,15 @@
   .ui-select,
   .input {
     @apply w-full rounded-[10px] border border-border bg-surface-2 px-3 py-2.5 text-text;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .ui-select,
+  select {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .ui-checkbox {
@@ -536,6 +556,8 @@
 
   .modal-body {
     @apply overflow-y-auto p-4 sm:p-5;
+    min-width: 0;
+    scrollbar-width: none;
     max-height: calc(min(720px, 100vh - 2rem) - 4.5rem);
   }
 

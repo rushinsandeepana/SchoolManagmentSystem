@@ -13,6 +13,9 @@ import com.school.management.mapper.EntityMapper;
 import com.school.management.model.entity.Subject;
 import com.school.management.repository.SubjectRepository;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
@@ -52,6 +55,14 @@ public class SubjectService {
         return PageResponse.from(
                 subjectRepository.search(query, PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.ASC, "subjectName"))),
                 EntityMapper::toSubjectResponse);
+    }
+
+    public List<SubjectResponse> getAllSubjects() {
+        return subjectRepository.findAll(
+            Sort.by(Sort.Direction.ASC, "subjectName")
+        ).stream()
+         .map(EntityMapper::toSubjectResponse)
+         .collect(Collectors.toList());
     }
 
     @Transactional

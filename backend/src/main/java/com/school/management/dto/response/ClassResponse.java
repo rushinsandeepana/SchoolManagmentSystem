@@ -13,6 +13,7 @@ public class ClassResponse {
     private String section;
     private String description;
     private Integer capacity;
+    private Long classTeacherId;
     private String classTeacherName;
     private boolean active;
     private Instant createdAt;

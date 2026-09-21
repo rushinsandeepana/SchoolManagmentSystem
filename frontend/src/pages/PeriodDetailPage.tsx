@@ -3,7 +3,9 @@ import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../context/ToastContext'
 import { ListControls } from '../components/ui'
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal'
 import { useClientList } from '../hooks/useClientList'
 
 type MediaFile = {
@@ -17,12 +19,13 @@ type MediaFile = {
 export default function PeriodDetailPage() {
   const { id } = useParams()
   const { t } = useTranslation()
-  const { user } = useAuth()
+  const { user } = useAuth() as { user: { role: string } | null }
+  const { showToast } = useToast()
   const [detail, setDetail] = useState<any>(null)
   const [form, setForm] = useState({ activityTitle: '', activityDescription: '', notes: '' })
-  const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const [uploading, setUploading] = useState(false)
+  const [fileToDelete, setFileToDelete] = useState<MediaFile | null>(null)
 
   const files: MediaFile[] = detail?.files || []
   const fileList = useClientList(files, {
@@ -41,19 +44,22 @@ export default function PeriodDetailPage() {
     })
 
   useEffect(() => {
-    load().catch((err) => setError(err.response?.data?.message || t('common.error')))
-  }, [id])
+    load().catch((err) => {
+      const message = err.response?.data?.message || t('common.error')
+      setError(message)
+      showToast(message, 'error')
+    })
+  }, [id, showToast])
 
   const saveContent = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
-    setMessage('')
     setError('')
     try {
       const res = await api.put(`/periods/${id}/content`, form)
       setDetail(res.data)
-      setMessage(t('common.updated'))
+      showToast(t('common.updated'), 'success')
     } catch (err: any) {
-      setError(err.response?.data?.message || t('common.error'))
+      showToast(err.response?.data?.message || t('common.error'), 'error')
     }
   }
 
@@ -69,19 +75,25 @@ export default function PeriodDetailPage() {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       await load()
-      setMessage(t('common.created'))
+      showToast(t('common.created'), 'success')
     } catch (err: any) {
-      setError(err.response?.data?.message || t('period.uploadFailed'))
+      showToast(err.response?.data?.message || t('period.uploadFailed'), 'error')
     } finally {
       setUploading(false)
       e.target.value = ''
     }
   }
 
-  const deleteFile = async (fileId: number) => {
-    if (!window.confirm(t('common.confirmDelete'))) return
-    await api.delete(`/files/${fileId}`)
-    await load()
+  const deleteFile = async () => {
+    if (!fileToDelete) return
+    try {
+      await api.delete(`/files/${fileToDelete.id}`)
+      await load()
+      setFileToDelete(null)
+      showToast(t('common.deleted', 'Deleted successfully'), 'success')
+    } catch (err: any) {
+      showToast(err.response?.data?.message || t('common.error'), 'error')
+    }
   }
 
   const openFile = async (file: MediaFile) => {
@@ -118,7 +130,6 @@ export default function PeriodDetailPage() {
         </div>
       </div>
 
-      {message && <div className="alert alert-ok">{message}</div>}
       {error && <div className="alert alert-error">{error}</div>}
 
       {detail && (
@@ -192,7 +203,7 @@ export default function PeriodDetailPage() {
                       <button className="btn btn-outline btn-sm" type="button" onClick={() => openFile(file)}>
                         Open
                       </button>
-                      <button className="btn btn-danger btn-sm" type="button" onClick={() => deleteFile(file.id)}>
+                      <button className="btn btn-danger btn-sm" type="button" onClick={() => setFileToDelete(file)}>
                         {t('common.delete')}
                       </button>
                     </div>
@@ -203,6 +214,12 @@ export default function PeriodDetailPage() {
           </div>
         </>
       )}
+
+      <ConfirmDeleteModal
+        open={fileToDelete !== null}
+        onClose={() => setFileToDelete(null)}
+        onConfirm={deleteFile}
+      />
     </div>
   )
 }

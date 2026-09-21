@@ -2,6 +2,7 @@ package com.school.management.service;
 
 import com.school.management.dto.request.AssignPeriodRequest;
 import com.school.management.dto.request.PeriodContentRequest;
+import com.school.management.dto.response.PageResponse;
 import com.school.management.dto.response.PeriodDetailResponse;
 import com.school.management.dto.response.PeriodSlotResponse;
 import com.school.management.exception.BadRequestException;
@@ -11,6 +12,7 @@ import com.school.management.model.entity.PeriodContent;
 import com.school.management.model.entity.PeriodSlot;
 import com.school.management.model.entity.User;
 import com.school.management.model.enums.Role;
+import com.school.management.model.enums.PeriodType;
 import com.school.management.repository.MediaFileRepository;
 import com.school.management.repository.PeriodContentRepository;
 import com.school.management.repository.PeriodSlotRepository;
@@ -19,6 +21,8 @@ import com.school.management.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.time.Instant;
 import java.util.List;
@@ -32,6 +36,27 @@ public class PeriodService {
     private final MediaFileRepository mediaFileRepository;
     private final UserRepository userRepository;
     private final TeacherService teacherService;
+
+    public List<PeriodSlotResponse> getAllAssignments() {
+        return periodSlotRepository.findAllByOrderByDayOfWeekAscPeriodNumberAsc().stream()
+                .map(EntityMapper::toPeriodSlotResponse)
+                .toList();
+    }
+
+    public PageResponse<PeriodSlotResponse> listAssignments(int page, int size, String search, PeriodType periodType) {
+        int safePage = Math.max(page, 0);
+        int safeSize = size <= 0 ? 10 : Math.min(size, 100);
+        String query = search == null ? "" : search.trim();
+        return PageResponse.from(
+            periodSlotRepository.searchAssignments(
+                query,
+                periodType,
+                PageRequest.of(safePage, safeSize, Sort.by(
+                    Sort.Order.asc("dayOfWeek"),
+                    Sort.Order.asc("periodNumber"),
+                    Sort.Order.asc("teacher.fullName")))),
+            EntityMapper::toPeriodSlotResponse);
+    }
 
     public List<PeriodSlotResponse> getTeacherSchedule(Long teacherId) {
         teacherService.requireTeacher(teacherId);

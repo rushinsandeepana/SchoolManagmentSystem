@@ -48,7 +48,7 @@ export default function Layout() {
     }`
 
   return (
-    <div className="flex min-h-screen flex-col md:grid md:grid-cols-[220px_1fr] md:grid-rows-[auto_1fr_auto]">
+    <div className="flex min-h-screen flex-col md:grid md:h-screen md:grid-cols-[220px_1fr] md:grid-rows-[auto_1fr_auto] md:overflow-hidden">
       <header className="sticky top-0 z-40 flex items-center justify-between gap-3 bg-nav px-3 py-3 text-nav-text shadow-card sm:px-4 md:col-span-full">
         <div className="flex min-w-0 items-center gap-2">
           <button
@@ -101,7 +101,7 @@ export default function Layout() {
         ))}
       </nav>
 
-      <aside className="hidden min-h-0 flex-col gap-1 border-r border-border bg-surface px-3 py-4 md:flex">
+      <aside className="hidden min-h-0 flex-col gap-1 overflow-y-auto border-r border-border bg-surface px-3 py-4 md:flex">
         <div className="mb-2 truncate px-3.5 text-sm text-muted">{user?.fullName}</div>
         {links.map((l) => (
           <NavLink
@@ -115,7 +115,7 @@ export default function Layout() {
         ))}
       </aside>
 
-      <main className="fade-in mx-auto w-full max-w-[1100px] flex-1 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6">
+      <main className="fade-in min-h-0 overflow-y-auto mx-auto w-full max-w-[1100px] flex-1 px-3 py-4 sm:px-4 sm:py-5 md:px-6 md:py-6">
         <Outlet />
       </main>
 

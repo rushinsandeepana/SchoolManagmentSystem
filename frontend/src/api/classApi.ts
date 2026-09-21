@@ -7,4 +7,5 @@ export const classApi = {
   create: (payload: Record<string, unknown>) => api.post('/admin/classes', payload),
   update: (id: number, payload: Record<string, unknown>) => api.put(`/admin/classes/${id}`, payload),
   remove: (id: number) => api.delete(`/admin/classes/${id}`),
+  getAllClasses: () => api.get('/admin/classes/all'),
 }

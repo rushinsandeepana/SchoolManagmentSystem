@@ -5,6 +5,7 @@ import { subjectApi } from '../../../api/subjectApi'
 import { Button, DataTable } from '../../../components/ui'
 import { useServerList } from '../../../hooks/useServerList'
 import { useToast } from '../../../context/ToastContext'
+import ConfirmDeleteModal from '../../../components/ConfirmDeleteModal'
 import SubjectFormModal from './SubjectFormModal'
 import type { Subject, SubjectForm } from '../../../types/subject'
 
@@ -30,6 +31,7 @@ export default function SubjectsPage() {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof SubjectForm, string>>>({})
+  const [deleteId, setDeleteId] = useState<number | null>(null)
 
   const fetcher = useCallback(
     (query: { page?: number; size?: number; search?: string }) => subjectApi.list(query),
@@ -134,12 +136,11 @@ export default function SubjectsPage() {
   }
 
   const onDelete = async (id: number) => {
-    if (!window.confirm(t('common.confirmDelete'))) return
-
     try {
       await subjectApi.remove(id)
       showToast(t('common.deleted', 'Deleted successfully'), 'success')
       list.reload()
+      setDeleteId(null)
     } catch (error: any) {
       showToast(error.response?.data?.message || t('common.error'), 'error')
     }
@@ -163,7 +164,7 @@ export default function SubjectsPage() {
             <Button type="button" variant="secondary" size="sm" onClick={() => startEdit(subject)}>
               {t('common.manage')}
             </Button>
-            <Button type="button" variant="danger" size="sm" onClick={() => onDelete(subject.id)}>
+            <Button type="button" variant="danger" size="sm" onClick={() => setDeleteId(subject.id)}>
               {t('common.delete')}
             </Button>
           </div>
@@ -211,6 +212,11 @@ export default function SubjectsPage() {
           loading={list.loading}
         />
       </div>
+      <ConfirmDeleteModal
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => deleteId !== null && onDelete(deleteId)}
+      />
     </div>
   )
 }

@@ -47,10 +47,12 @@
     "inactive": "Inactive",
     "created": "Created successfully",
     "updated": "Updated successfully",
+    "deleted": "Deleted successfully",
     "confirmDelete": "Are you sure you want to delete?",
     "loading": "Loading...",
     "error": "Error",
     "close": "Close",
+    "selectOption": "Select an option",
     "emptyTableMessage": "No data available",
     "search": "Search",
     "searchPlaceholder": "Search table data...",
@@ -59,7 +61,12 @@
     "next": "Next",
     "pageOf": "Page {{page}} of {{total}}",
     "showingRange": "Showing {{from}}–{{to}} of {{total}}",
-    "noResults": "No matching results"
+    "noResults": "No matching results",
+    "noData": "No data available",
+    "select": "Select",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "activity": "Activity"
   },
   "validation": {
     "teacherRequired": "Teacher is required",
@@ -79,6 +86,8 @@
     "dayRequired": "Day is required",
     "periodRequired": "Period is required",
     "periodTypeRequired": "Period type is required",
+    "classRequired": "Class is required",
+    "assignmentFieldsRequired": "Please complete all required fields",
     "subjectTypeRequired": "Subject type is required",
     "statusRequired": "Status is required"
   },
@@ -199,6 +208,32 @@
     "placeholders": {
       "title": "Enter note title",
       "content": "Enter note content"
+    }
+  },
+  "asignPeriods": {
+    "title": "Assign Periods",
+    "selectClass": "Select Class",
+    "selectDay": "Select Day",
+    "selectPeriod": "Select Period",
+    "selectPeriodType": "Select Period Type",
+    "selectSubject": "Select Subject",
+    "assign": "Assign",
+    "assignedPeriods": "Assigned Periods",
+    "noAssignedPeriods": "No assigned periods yet",
+    "placeholders": {
+      "class": "Select class",
+      "day": "Select day",
+      "period": "Select period",
+      "periodType": "Select period type",
+      "subject": "Select subject"
+    },
+    "columns": {
+      "day": "Day",
+      "teacherName": "Teacher Name",
+      "period": "Period",
+      "periodType": "Period Type",
+      "subject": "Subject",
+      "className": "Class"
     }
   }
 }

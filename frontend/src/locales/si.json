@@ -47,10 +47,12 @@
     "inactive": "අක්‍රීය",
     "created": "සාර්ථකව නිර්මාණය විය",
     "updated": "සාර්ථකව යාවත්කාලීන විය",
+    "deleted": "සාර්ථකව මකා ඇත",
     "confirmDelete": "ඔබට මකන්න අවශ්‍යද?",
     "loading": "පූරණය වෙමින්...",
     "error": "දෝෂයකි",
     "close": "වසන්න",
+    "selectOption": "විකල්පයක් තෝරන්න",
     "emptyTableMessage": "දත්ත නොමැත",
     "search": "සොයන්න",
     "searchPlaceholder": "වගු දත්ත සොයන්න...",
@@ -59,7 +61,12 @@
     "next": "ඊළඟ",
     "pageOf": "පිටුව {{page}} / {{total}}",
     "showingRange": "{{total}} න් {{from}}–{{to}} පෙන්වයි",
-    "noResults": "ගැලපෙන ප්‍රතිඵල නැත"
+    "noResults": "ගැලපෙන ප්‍රතිඵල නැත",
+    "noData": "දත්ත නොමැත",
+    "select": "තෝරන්න",
+    "selectAll": "සියල්ල තෝරන්න",
+    "deselectAll": "සියල්ල අතුරුදන් කරන්න",
+    "activity": "ක්‍රියාකාරකම"
   },
   "validation": {
     "teacherRequired": "ගුරුවරයා අවශ්‍යයි",
@@ -79,6 +86,8 @@
     "dayRequired": "දිනය අවශ්‍යයි",
     "periodRequired": "කාලපරිච්ඡේදය අවශ්‍යයි",
     "periodTypeRequired": "කාලපරිච්ඡේද වර්ගය අවශ්‍යයි",
+    "classRequired": "පන්තිය අවශ්‍යයි",
+    "assignmentFieldsRequired": "කරුණාකර අවශ්‍ය සියලුම ක්ෂේත්‍ර සම්පූර්ණ කරන්න",
     "subjectTypeRequired": "විෂය වර්ගය අවශ්‍යයි",
     "statusRequired": "තත්ත්වය අවශ්‍යයි"
   },
@@ -199,6 +208,32 @@
     "placeholders": {
       "title": "සටහන් මාතෘකාව ඇතුළත් කරන්න",
       "content": "සටහන් අන්තර්ගතය ඇතුළත් කරන්න"
+    }
+  },
+  "asignPeriods": {
+    "title": "කාලපරිච්ඡේද පවරන්න",
+    "selectClass": "පන්තිය තෝරන්න",
+    "selectDay": "දිනය තෝරන්න",
+    "selectPeriod": "කාලපරිච්ඡේදය තෝරන්න",
+    "selectPeriodType": "වර්ගය තෝරන්න",
+    "selectSubject": "විෂය තෝරන්න",
+    "assign": "පවරන්න",
+    "assignedPeriods": "පවතිණ කාලපරිච්ඡේද",
+    "noAssignedPeriods": "තවම පවතිණ කාලපරිච්ඡේද නමකට",
+    "placeholders": {
+      "class": "පන්තිය තෝරන්න",
+      "day": "දිනය තෝරන්න",
+      "period": "කාලපරිච්ඡේදය තෝරන්න",
+      "periodType": "වර්ගය තෝරන්න",
+      "subject": "විෂය තෝරන්න"
+    },
+    "columns": {
+      "day": "දිනය",
+      "teacherName": "ගුරුවරයාගේ නම",
+      "period": "කාලපරිච්ඡේදය",
+      "periodType": "වර්ගය",
+      "subject": "විෂය",
+      "className": "පන්තිය"
     }
   }
 }

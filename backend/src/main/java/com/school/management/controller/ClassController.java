@@ -8,7 +8,13 @@ import com.school.management.dto.response.PageResponse;
 import com.school.management.service.SchoolClassService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
 
 @RestController
 @RequestMapping("/api/admin/classes")
@@ -24,6 +30,12 @@ public class ClassController {
             @RequestParam(required = false) String search) {
         return schoolClassService.listClasses(page, size, search);
     }
+
+    @GetMapping("/all")
+    public List<ClassResponse> getAllClasses() {
+        return schoolClassService.getAllClasses();
+    }
+    
 
     @PostMapping
     public ClassResponse createClass(@Valid @RequestBody CreateClassRequest request) {

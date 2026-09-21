@@ -1,4 +1,5 @@
 import React from 'react'
+import Button from './Button'
 import Pagination from './Pagination'
 import SearchInput from './SearchInput'
 
@@ -6,6 +7,11 @@ interface Column<T> {
   key: keyof T | string
   label: string
   render?: (row: T) => React.ReactNode
+}
+
+export interface DataTableFilter {
+  key: string
+  label: string
 }
 
 interface DataTableProps<T> {
@@ -24,6 +30,9 @@ interface DataTableProps<T> {
   onPageChange?: (page: number) => void
   onPageSizeChange?: (size: number) => void
   loading?: boolean
+  filterOptions?: DataTableFilter[]
+  activeFilter?: string
+  onFilterChange?: (filter: string) => void
 }
 
 export default function DataTable<T>({
@@ -42,6 +51,9 @@ export default function DataTable<T>({
   onPageChange,
   onPageSizeChange,
   loading = false,
+  filterOptions = [],
+  activeFilter,
+  onFilterChange,
 }: DataTableProps<T>) {
   const rowKey = getRowKey || ((_row: T, index: number) => index)
   const showPagination =
@@ -51,15 +63,32 @@ export default function DataTable<T>({
 
   return (
     <div className="ui-table-panel">
-      {searchable && onSearchChange && (
+      {(searchable && onSearchChange) || (filterOptions.length > 0 && onFilterChange) ? (
         <div className="ui-table-toolbar">
-          <SearchInput
-            value={searchValue}
-            onChange={onSearchChange}
-            placeholder={searchPlaceholder}
-          />
+          {searchable && onSearchChange ? (
+            <SearchInput
+              value={searchValue}
+              onChange={onSearchChange}
+              placeholder={searchPlaceholder}
+            />
+          ) : <span />}
+          {filterOptions.length > 0 && onFilterChange && (
+            <div className="flex flex-wrap gap-2">
+              {filterOptions.map((filter) => (
+                <Button
+                  key={filter.key}
+                  type="button"
+                  size="sm"
+                  variant={activeFilter === filter.key ? 'primary' : 'secondary'}
+                  onClick={() => onFilterChange(filter.key)}
+                >
+                  {filter.label}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      ) : null}
 
       <div className="ui-table-wrap">
         <table className="ui-table">

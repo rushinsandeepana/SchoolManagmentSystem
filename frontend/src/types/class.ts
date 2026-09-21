@@ -4,6 +4,7 @@ export type SchoolClass = {
   section: string
   description?: string
   capacity?: number
+  classTeacherId?: number
   classTeacherName?: string
   active: boolean
 }
@@ -13,6 +14,5 @@ export type ClassForm = {
   section: string
   description: string
   capacity: string | number
-  classTeacherName: string
   active: boolean
 }

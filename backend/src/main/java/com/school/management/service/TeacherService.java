@@ -4,6 +4,7 @@ import com.school.management.dto.request.CreateTeacherRequest;
 import com.school.management.dto.request.UpdateTeacherRequest;
 import com.school.management.dto.response.DashboardResponse;
 import com.school.management.dto.response.PageResponse;
+import com.school.management.dto.response.SubjectResponse;
 import com.school.management.dto.response.UserResponse;
 import com.school.management.exception.BadRequestException;
 import com.school.management.exception.ResourceNotFoundException;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +53,20 @@ public class TeacherService {
                         query,
                         PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.ASC, "fullName"))),
                 EntityMapper::toUserResponse);
+    }
+
+    public List<UserResponse> getAllSubjects() {
+        return userRepository.findAll(
+            Sort.by(Sort.Direction.ASC, "fullName")
+        ).stream()
+         .map(EntityMapper::toUserResponse)
+         .collect(Collectors.toList());
+    }
+
+    public List<UserResponse> getAllTeachers() {
+        return userRepository.findByRoleOrderByFullNameAsc(Role.TEACHER).stream()
+                .map(EntityMapper::toUserResponse)
+                .toList();
     }
 
     public UserResponse getTeacher(Long id) {

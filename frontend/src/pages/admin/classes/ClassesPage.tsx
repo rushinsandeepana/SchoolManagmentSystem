@@ -5,15 +5,17 @@ import { classApi } from '../../../api/classApi'
 import { Button, DataTable } from '../../../components/ui'
 import { useServerList } from '../../../hooks/useServerList'
 import { useToast } from '../../../context/ToastContext'
+import ConfirmDeleteModal from '../../../components/ConfirmDeleteModal'
 import ClassFormModal from './ClassFormModal'
 import type { ClassForm, SchoolClass } from '../../../types/class'
+import { periodApi } from '../../../api/periodApi'
+import { Teacher } from '../../../types/teacher'
 
 const emptyForm: ClassForm = {
   grade: '',
   section: '',
   description: '',
   capacity: '',
-  classTeacherName: '',
   active: true,
 }
 
@@ -23,6 +25,9 @@ export default function ClassesPage() {
   const [form, setForm] = useState<ClassForm>(emptyForm)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [showForm, setShowForm] = useState(false)
+  const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [teachers, setTeachers] = useState<Array<{ id: number; fullName: string }>>([])
+  const [teacherId, setTeacherId] = useState<string>('')
 
   const fetcher = useCallback(
     (query: { page?: number; size?: number; search?: string }) => classApi.list(query),
@@ -33,6 +38,13 @@ export default function ClassesPage() {
   useEffect(() => {
     if (list.error) showToast(list.error, 'error')
   }, [list.error, showToast])
+
+  useEffect(() => {
+    periodApi.getTeachers().then((res) => {
+      const list = (res.data || []).filter((teacher: Teacher) => teacher.active)
+      setTeachers(list)
+    })
+  }, [])
 
   const onChange = (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = event.target
@@ -45,6 +57,7 @@ export default function ClassesPage() {
   const startCreate = () => {
     setEditingId(null)
     setForm(emptyForm)
+    setTeacherId('')
     setShowForm(true)
   }
 
@@ -55,9 +68,9 @@ export default function ClassesPage() {
       section: schoolClass.section,
       description: schoolClass.description || '',
       capacity: schoolClass.capacity ?? '',
-      classTeacherName: schoolClass.classTeacherName || '',
       active: schoolClass.active,
     })
+    setTeacherId(schoolClass.classTeacherId ? String(schoolClass.classTeacherId) : '')
     setShowForm(true)
   }
 
@@ -73,7 +86,7 @@ export default function ClassesPage() {
       section: form.section,
       description: form.description,
       capacity: form.capacity === '' ? null : Number(form.capacity),
-      classTeacherName: form.classTeacherName,
+      classTeacherId: teacherId ? Number(teacherId) : null,
       active: form.active,
     }
 
@@ -100,11 +113,11 @@ export default function ClassesPage() {
   }
 
   const onDelete = async (id: number) => {
-    if (!window.confirm(t('common.confirmDelete'))) return
     try {
       await classApi.remove(id)
       showToast(t('common.deleted', 'Deleted successfully'), 'success')
       list.reload()
+      setDeleteId(null)
     } catch (error: any) {
       showToast(error.response?.data?.message || t('common.error'), 'error')
     }
@@ -129,7 +142,7 @@ export default function ClassesPage() {
             <Button type="button" variant="secondary" size="sm" onClick={() => startEdit(schoolClass)}>
               {t('common.manage')}
             </Button>
-            <Button type="button" variant="danger" size="sm" onClick={() => onDelete(schoolClass.id)}>
+            <Button type="button" variant="danger" size="sm" onClick={() => setDeleteId(schoolClass.id)}>
               {t('common.delete')}
             </Button>
           </div>
@@ -150,8 +163,12 @@ export default function ClassesPage() {
 
       <ClassFormModal
         open={showForm}
+        teachers={teachers}
+        teacherId={teacherId}
+        setTeacherId={setTeacherId}
         editingId={editingId}
         form={form}
+        errors={{}}
         onChange={onChange}
         onSubmit={onSubmit}
         onClose={() => setShowForm(false)}
@@ -176,6 +193,11 @@ export default function ClassesPage() {
           loading={list.loading}
         />
       </div>
+      <ConfirmDeleteModal
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => deleteId !== null && onDelete(deleteId)}
+      />
     </div>
   )
 }

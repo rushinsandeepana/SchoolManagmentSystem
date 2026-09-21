@@ -3,11 +3,21 @@ import type { ChangeEvent, FormEvent } from 'react'
 import Modal from '../../../components/Modal'
 import { Button, InputField, OptionGroup, SelectField } from '../../../components/ui'
 import type { ClassForm } from '../../../types/class'
+import { AssignmentErrors } from '../periods/AssignPeriodFormModal'
+
+type Teacher = {
+  id: string | number
+  fullName: string
+}
 
 type ClassFormModalProps = {
   open: boolean
+  teachers: Teacher[]
+  teacherId: string | number
+  setTeacherId: (value: string) => void
   editingId?: string | number | null
   form: ClassForm
+  errors: AssignmentErrors
   onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
   onClose: () => void
@@ -23,10 +33,14 @@ const statusOptions = [
 export default function ClassFormModal({
   open,
   editingId,
+  teachers,
   form,
+  errors,
   onChange,
   onSubmit,
   onClose,
+  teacherId,
+  setTeacherId,
 }: ClassFormModalProps) {
   const { t } = useTranslation()
 
@@ -66,12 +80,18 @@ export default function ClassFormModal({
             placeholder={t('class.placeholders.capacity')}
           />
 
-          <InputField
-            label={t('class.fields.classTeacherName')}
-            name="classTeacherName"
-            value={form.classTeacherName}
-            onChange={onChange}
-            placeholder={t('class.placeholders.classTeacherName')}
+          <SelectField
+            label={t('teacher.singular')}
+            placeholder={t('common.selectOption')}
+            value={teacherId}
+            onChange={(event: { target: { value: string } }) => setTeacherId(event.target.value)}
+            required
+            title={t('validation.teacherRequired')}
+            error={errors.teacherId}
+            options={teachers.map((teacher) => ({
+              value: String(teacher.id),
+              label: teacher.fullName,
+            }))}
           />
 
           <label className="ui-field sm:col-span-2">

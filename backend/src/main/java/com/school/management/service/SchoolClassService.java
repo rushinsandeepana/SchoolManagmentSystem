@@ -8,8 +8,13 @@ import com.school.management.exception.BadRequestException;
 import com.school.management.exception.ResourceNotFoundException;
 import com.school.management.mapper.EntityMapper;
 import com.school.management.model.entity.SchoolClass;
+import com.school.management.model.entity.User;
 import com.school.management.repository.SchoolClassRepository;
+import com.school.management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -20,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class SchoolClassService {
 
     private final SchoolClassRepository schoolClassRepository;
+    private final UserRepository userRepository;
 
     @Transactional(readOnly = true)
     public PageResponse<ClassResponse> listClasses(int page, int size, String search) {
@@ -30,6 +36,15 @@ public class SchoolClassService {
                 schoolClassRepository.search(query, PageRequest.of(safePage, safeSize,
                         Sort.by(Sort.Direction.ASC, "grade").and(Sort.by(Sort.Direction.ASC, "section")))),
                 EntityMapper::toClassResponse);
+    }
+
+    @Transactional 
+    public List<ClassResponse> getAllClasses() {
+        return schoolClassRepository.findAll(
+                Sort.by(Sort.Direction.ASC, "grade").and(Sort.by(Sort.Direction.ASC, "section")))
+                .stream()
+                .map(EntityMapper::toClassResponse)
+                .toList();
     }
 
     @Transactional
@@ -43,7 +58,7 @@ public class SchoolClassService {
                 .section(section)
                 .description(trimToNull(request.getDescription()))
                 .capacity(request.getCapacity())
-                .classTeacherName(trimToNull(request.getClassTeacherName()))
+            .classTeacher(resolveTeacher(request.getClassTeacherId()))
                 .active(request.getActive())
                 .build();
         return EntityMapper.toClassResponse(schoolClassRepository.save(schoolClass));
@@ -60,7 +75,7 @@ public class SchoolClassService {
         schoolClass.setSection(section);
         schoolClass.setDescription(trimToNull(request.getDescription()));
         schoolClass.setCapacity(request.getCapacity());
-        schoolClass.setClassTeacherName(trimToNull(request.getClassTeacherName()));
+        schoolClass.setClassTeacher(resolveTeacher(request.getClassTeacherId()));
         schoolClass.setActive(request.getActive());
         return EntityMapper.toClassResponse(schoolClassRepository.save(schoolClass));
     }
@@ -88,5 +103,11 @@ public class SchoolClassService {
         if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private User resolveTeacher(Long teacherId) {
+        if (teacherId == null) return null;
+        return userRepository.findById(teacherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found"));
     }
 }

@@ -7,6 +7,9 @@ import com.school.management.dto.response.PageResponse;
 import com.school.management.dto.response.SubjectResponse;
 import com.school.management.service.SubjectService;
 import jakarta.validation.Valid;
+
+import java.util.List;
+
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
@@ -24,6 +27,11 @@ public class SubjectController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String search) {
         return subjectService.listSubjects(page, size, search);
+    }
+
+    @GetMapping("/all")
+    public List<SubjectResponse> getAllSubjects() {
+        return subjectService.getAllSubjects();
     }
 
     @PostMapping

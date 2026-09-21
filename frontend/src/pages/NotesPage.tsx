@@ -5,6 +5,7 @@ import { teacherApi } from '../api/teacherApi'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import NoteFormModal from '../components/NoteFormModal'
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal'
 import { ListControls } from '../components/ui'
 import { useServerList } from '../hooks/useServerList'
 import type { ListQuery, PageResponse } from '../types/paging'
@@ -31,6 +32,7 @@ export default function NotesPage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [deleteId, setDeleteId] = useState<number | null>(null)
 
   const isAdmin = user?.role === 'ADMIN'
 
@@ -92,11 +94,11 @@ export default function NotesPage() {
   }
 
   const onDelete = async (id: number) => {
-    if (!window.confirm(t('common.confirmDelete'))) return
     try {
       await api.delete(isAdmin ? `/admin/notes/${id}` : `/teacher/notes/${id}`)
       showToast(t('common.deleted', 'Deleted successfully'), 'success')
       list.reload()
+      setDeleteId(null)
     } catch (err: any) {
       showToast(err.response?.data?.message || t('common.error'), 'error')
     }
@@ -151,7 +153,7 @@ export default function NotesPage() {
                   <button
                     className="btn btn-danger btn-sm shrink-0"
                     type="button"
-                    onClick={() => onDelete(note.id)}
+                    onClick={() => setDeleteId(note.id)}
                   >
                     {t('common.delete')}
                   </button>
@@ -165,6 +167,11 @@ export default function NotesPage() {
           </div>
         </ListControls>
       </div>
+      <ConfirmDeleteModal
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => deleteId !== null && onDelete(deleteId)}
+      />
     </div>
   )
 }

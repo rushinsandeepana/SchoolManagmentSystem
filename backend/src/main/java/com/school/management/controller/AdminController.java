@@ -38,6 +38,11 @@ public class AdminController {
         return teacherService.listTeachers(page, size, search);
     }
 
+    @GetMapping("/all/teachers")
+    public List<UserResponse> getAllTeachers() {
+        return teacherService.getAllTeachers();
+    }
+
     @GetMapping("/teachers/{id}")
     public UserResponse getTeacher(@PathVariable Long id) {
         return teacherService.getTeacher(id);

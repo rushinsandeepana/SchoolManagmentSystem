@@ -6,6 +6,7 @@ import { subjectApi } from '../../../api/subjectApi'
 import { Button, DataTable } from '../../../components/ui'
 import { useServerList } from '../../../hooks/useServerList'
 import { useToast } from '../../../context/ToastContext'
+import ConfirmDeleteModal from '../../../components/ConfirmDeleteModal'
 import TeacherFormModal from './TeacherFormModal'
 import type { Teacher, TeacherForm } from '../../../types/teacher'
 import type { Subject } from '../../../types/subject'
@@ -27,6 +28,7 @@ export default function TeachersPage() {
   const [showForm, setShowForm] = useState(false)
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [errors, setErrors] = useState<Partial<Record<keyof TeacherForm, string>>>({})
+  const [deleteId, setDeleteId] = useState<number | null>(null)
 
   const fetcher = useCallback(
     (query: { page?: number; size?: number; search?: string }) => teacherApi.list(query),
@@ -130,11 +132,11 @@ export default function TeachersPage() {
   }
 
   const onDelete = async (id: number) => {
-    if (!window.confirm(t('common.confirmDelete'))) return
     try {
       await teacherApi.remove(id)
       showToast(t('common.deleted', 'Deleted successfully'), 'success')
       list.reload()
+      setDeleteId(null)
     } catch (err: any) {
       showToast(err.response?.data?.message || t('common.error'), 'error')
     }
@@ -158,7 +160,7 @@ export default function TeachersPage() {
             <Button type="button" variant="secondary" size="sm" onClick={() => startEdit(teacher)}>
               {t('common.manage')}
             </Button>
-            <Button type="button" variant="danger" size="sm" onClick={() => onDelete(teacher.id)}>
+            <Button type="button" variant="danger" size="sm" onClick={() => setDeleteId(teacher.id)}>
               {t('common.delete')}
             </Button>
           </div>
@@ -210,6 +212,11 @@ export default function TeachersPage() {
           loading={list.loading}
         />
       </div>
+      <ConfirmDeleteModal
+        open={deleteId !== null}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => deleteId !== null && onDelete(deleteId)}
+      />
     </div>
   )
 }

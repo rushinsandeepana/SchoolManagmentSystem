@@ -14,6 +14,7 @@ type InputFieldProps = InputHTMLAttributes<HTMLInputElement> & {
 type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
   label?: string
   options: SelectOption[]
+  placeholder?: string
   error?: string
 }
 
@@ -47,7 +48,7 @@ export function InputField({ label, className = '', error, ...props }: InputFiel
   )
 }
 
-export function SelectField({ label, options, className = '', error, ...props }: SelectFieldProps) {
+export function SelectField({ label, options, placeholder, className = '', error, ...props }: SelectFieldProps) {
   const selectClass = className ? `ui-select ${className}` : 'ui-select'
   const isRequired = Boolean(props.required)
 
@@ -55,6 +56,7 @@ export function SelectField({ label, options, className = '', error, ...props }:
     <label className="ui-field">
       {label && <span className="ui-field__label">{label}{isRequired && <span className="required-mark"> *</span>}</span>}
       <select className={selectClass} {...props}>
+        {placeholder && <option value="" disabled>{placeholder}</option>}
         {options.map((option) => (
           <option key={String(option.value)} value={option.value}>
             {option.label}

@@ -30,8 +30,9 @@ public class SchoolClass {
     @Column
     private Integer capacity;
 
-    @Column(length = 120)
-    private String classTeacherName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "class_teacher_id")
+    private User classTeacher;
 
     @Column(nullable = false)
     @Builder.Default
