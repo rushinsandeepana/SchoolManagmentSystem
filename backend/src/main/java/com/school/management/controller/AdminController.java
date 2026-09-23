@@ -11,11 +11,14 @@ import com.school.management.service.TeacherNoteService;
 import com.school.management.service.TeacherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j 
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
@@ -71,6 +74,7 @@ public class AdminController {
 
     @PostMapping("/periods")
     public PeriodSlotResponse assignPeriod(@Valid @RequestBody AssignPeriodRequest request) {
+        log.info("AssignPeriodRequest: {}", request);
         return periodService.assignPeriod(request);
     }
 

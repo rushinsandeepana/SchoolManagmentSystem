@@ -1,8 +1,15 @@
 import { useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
+import type { PeriodSlot } from '../types/period'
 
-export default function MonthCalendar() {
+type MonthCalendarProps = {
+  slots?: PeriodSlot[]
+}
+
+export default function MonthCalendar({ slots = [] }: MonthCalendarProps) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
@@ -19,6 +26,13 @@ export default function MonthCalendar() {
 
   const monthName = now.toLocaleString(undefined, { month: 'long', year: 'numeric' })
   const dows = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+  const slotsByDay = useMemo(() => {
+    const grouped: Record<string, PeriodSlot[]> = {}
+    for (const slot of slots) {
+      grouped[slot.dayOfWeek] = [...(grouped[slot.dayOfWeek] || []), slot]
+    }
+    return grouped
+  }, [slots])
 
   return (
     <div className="card">
@@ -32,11 +46,34 @@ export default function MonthCalendar() {
             {d}
           </div>
         ))}
-        {cells.map((d, i) => (
-          <div key={i} className={`day${d == null ? ' empty' : ''}${d === today ? ' today' : ''}`}>
-            {d ?? ''}
-          </div>
-        ))}
+        {cells.map((d, i) => {
+          if (d == null) return <div key={i} className="day empty" />
+
+          const date = new Date(year, month, d)
+          const isWeekend = date.getDay() === 0 || date.getDay() === 6
+          const dayName = date.toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase()
+          const daySlots = isWeekend ? [] : slotsByDay[dayName] || []
+
+          return (
+            <div
+              key={i}
+              className={`day${d === today ? ' today' : ''}${isWeekend ? ' disabled' : ''}`}
+              aria-disabled={isWeekend}
+            >
+              <span className="day-number">{d}</span>
+              {daySlots.slice(0, 3).map((slot) => (
+                <button
+                  key={slot.id}
+                  type="button"
+                  className={`month-slot ${slot.periodType}`}
+                  onClick={() => navigate(`/periods/${slot.id}`)}
+                >
+                  {slot.title || slot.subject || t(slot.periodType.toLowerCase())}
+                </button>
+              ))}
+            </div>
+          )
+        })}
       </div>
     </div>
   )

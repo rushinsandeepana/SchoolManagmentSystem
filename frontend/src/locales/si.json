@@ -84,6 +84,7 @@
     "noteTitleRequired": "සටහන් මාතෘකාව අවශ්‍යයි",
     "noteContentRequired": "සටහන් අන්තර්ගතය අවශ්‍යයි",
     "dayRequired": "දිනය අවශ්‍යයි",
+    "weekendDay": "ඔබ සති අන්ත දිනයක් එක් කර ඇත. එය වලංගු නොවේ. කරුණාකර වලංගු දිනයක් එක් කරන්න.",
     "periodRequired": "කාලපරිච්ඡේදය අවශ්‍යයි",
     "periodTypeRequired": "කාලපරිච්ඡේද වර්ගය අවශ්‍යයි",
     "classRequired": "පන්තිය අවශ්‍යයි",

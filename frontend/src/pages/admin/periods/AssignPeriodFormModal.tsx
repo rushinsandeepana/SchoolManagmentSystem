@@ -1,11 +1,10 @@
 import type { ChangeEvent, FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import Modal from '../../../components/Modal'
-import { Button, SelectField  } from '../../../components/ui'
+import { Button, InputField, SelectField } from '../../../components/ui'
 import { Subject } from '../../../types/subject'
 import type { SchoolClass } from '../../../types/class'
 
-const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']
 const TYPES = ['MANDATORY', 'RELIEF', 'FREE']
 
 type Teacher = {
@@ -14,7 +13,7 @@ type Teacher = {
 }
 
 type FormValues = {
-  dayOfWeek: string
+  date: string
   periodNumber: string | number
   periodType: string
   subject: string
@@ -53,6 +52,11 @@ export default function AssignPeriodFormModal({
 }: Props) {
   const { t } = useTranslation()
 
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const minDate = tomorrow.toISOString().split('T')[0];
+
   return (
     <Modal open={open} title={t('nav.assignPeriods')} onClose={onClose}>
       <form className="form" onSubmit={onSubmit} noValidate>
@@ -71,19 +75,16 @@ export default function AssignPeriodFormModal({
             }))}
           />
 
-          <SelectField
+          <InputField
             label={t('schedule.day')}
-            placeholder={t('common.selectOption')}
-            name="dayOfWeek"
-            value={form.dayOfWeek}
+            type="date"
+            name="date"
+            value={form.date}
             onChange={onChange}
+            min={minDate}
             required
             title={t('validation.dayRequired')}
-            error={errors.dayOfWeek}
-            options={DAYS.map((day) => ({
-              value: day,
-              label: t(day),
-            }))}
+            error={errors.date}
           />
 
           <SelectField
@@ -146,10 +147,14 @@ export default function AssignPeriodFormModal({
             }))}
           />
 
-          <label className="sm:col-span-2">
-            {t('period.title')}
-            <input className="input" name="title" value={form.title} onChange={onChange} placeholder={t('period.placeholders.title')} />
-          </label>
+          <InputField
+            className="sm:col-span-2"
+            label={t('period.title')}
+            name="title"
+            value={form.title}
+            onChange={onChange}
+            placeholder={t('period.placeholders.title')}
+          />
         </div>
 
         <div className="form-actions">

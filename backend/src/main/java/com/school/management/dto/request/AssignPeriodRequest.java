@@ -14,6 +14,7 @@ public class AssignPeriodRequest {
 
     @NotNull(message = "Day is required")
     private DayOfWeek dayOfWeek;
+    private String date;
 
     @NotNull(message = "Period is required")
     @Min(value = 1, message = "Period must be between 1 and 8")

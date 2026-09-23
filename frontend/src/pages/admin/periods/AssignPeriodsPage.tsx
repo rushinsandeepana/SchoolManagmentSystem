@@ -15,12 +15,36 @@ import { useServerList } from '../../../hooks/useServerList'
 import ConfirmDeleteModal from '../../../components/ConfirmDeleteModal'
 
 const emptyForm: PeriodForm = {
-  dayOfWeek: '',
+  date: '',
   periodNumber: '',
   periodType: '',
   subject: '',
   className: '',
   title: '',
+}
+
+const dateForDayOfWeek = (dayOfWeek: string) => {
+  const dayIndexes: Record<string, number> = {
+    SUNDAY: 0,
+    MONDAY: 1,
+    TUESDAY: 2,
+    WEDNESDAY: 3,
+    THURSDAY: 4,
+    FRIDAY: 5,
+    SATURDAY: 6,
+  }
+  const date = new Date()
+  date.setDate(date.getDate() + ((dayIndexes[dayOfWeek] - date.getDay() + 7) % 7))
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+const isWeekendDate = (value: string) => {
+  if (!value) return false
+  const day = new Date(`${value}T00:00:00`).getDay()
+  return day === 0 || day === 6
 }
 
 export default function AssignPeriodsPage() {
@@ -79,13 +103,18 @@ export default function AssignPeriodsPage() {
   const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setForm((f) => ({ ...f, [name]: value }))
-    setErrors((current) => ({ ...current, [name]: undefined }))
+    setErrors((current) => ({
+      ...current,
+      [name]: name === 'date' && isWeekendDate(value)
+        ? t('validation.weekendDay')
+        : undefined,
+    }))
   }
 
   const startEdit = (slot: PeriodSlot) => {
     setTeacherId(String(slot.teacherId))
     setForm({
-      dayOfWeek: slot.dayOfWeek,
+      date: dateForDayOfWeek(slot.dayOfWeek),
       periodNumber: slot.periodNumber,
       periodType: slot.periodType,
       subject: slot.subject || '',
@@ -119,7 +148,8 @@ export default function AssignPeriodsPage() {
 
     const nextErrors: AssignmentErrors = {}
     if (!teacherId) nextErrors.teacherId = t('validation.teacherRequired')
-    if (!form.dayOfWeek) nextErrors.dayOfWeek = t('validation.dayRequired')
+    if (!form.date) nextErrors.date = t('validation.dayRequired')
+    if (isWeekendDate(form.date)) nextErrors.date = t('validation.weekendDay')
     if (!form.periodNumber) nextErrors.periodNumber = t('validation.periodRequired')
     if (!form.periodType) nextErrors.periodType = t('validation.periodTypeRequired')
     if (!form.subject) nextErrors.subject = t('validation.subjectRequired')
@@ -131,10 +161,14 @@ export default function AssignPeriodsPage() {
     }
 
     try {
+      const selectedDate = new Date(`${form.date}T00:00:00`)
+      const dayOfWeek = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'][selectedDate.getDay()]
+
       await periodApi.assign({
         teacherId: Number(teacherId),
-        dayOfWeek: form.dayOfWeek,
+        dayOfWeek,
         periodNumber: Number(form.periodNumber),
+        date: form.date,
         periodType: form.periodType,
         subject: form.subject || null,
         className: form.className || null,

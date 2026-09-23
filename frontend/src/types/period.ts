@@ -3,7 +3,7 @@ export type PeriodType = 'MANDATORY' | 'RELIEF' | 'FREE'
 export type PeriodFilter = PeriodType | ''
 
 export type PeriodForm = {
-  dayOfWeek: string
+  date: string
   periodNumber: number | string
   periodType: PeriodType | ''
   subject: string

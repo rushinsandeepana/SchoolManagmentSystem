@@ -4,7 +4,6 @@ import com.school.management.dto.request.CreateTeacherRequest;
 import com.school.management.dto.request.UpdateTeacherRequest;
 import com.school.management.dto.response.DashboardResponse;
 import com.school.management.dto.response.PageResponse;
-import com.school.management.dto.response.SubjectResponse;
 import com.school.management.dto.response.UserResponse;
 import com.school.management.exception.BadRequestException;
 import com.school.management.exception.ResourceNotFoundException;
@@ -17,6 +16,8 @@ import com.school.management.repository.PeriodSlotRepository;
 import com.school.management.repository.TeacherNoteRepository;
 import com.school.management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +37,9 @@ public class TeacherService {
     private final MediaFileRepository mediaFileRepository;
     private final TeacherNoteRepository teacherNoteRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+    @Value ("${app.frontend-url}")
+    private String frontendUrl;
 
     public List<UserResponse> listTeachers() {
         return userRepository.findByRoleOrderByFullNameAsc(Role.TEACHER).stream()
@@ -51,7 +55,7 @@ public class TeacherService {
                 userRepository.searchByRole(
                         Role.TEACHER,
                         query,
-                        PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.ASC, "fullName"))),
+                        PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "id"))),
                 EntityMapper::toUserResponse);
     }
 
@@ -88,7 +92,17 @@ public class TeacherService {
                 .role(Role.TEACHER)
                 .active(true)
                 .build();
-        return EntityMapper.toUserResponse(userRepository.save(teacher));
+        User savedTeacher = userRepository.save(teacher);
+
+        emailService.sendTeacherWelcomeEmail(
+            savedTeacher.getEmail(),
+            savedTeacher.getFullName(),
+            savedTeacher.getUsername(),
+            request.getPassword(),
+            frontendUrl + "/login"
+        );
+
+    return EntityMapper.toUserResponse(savedTeacher);
     }
 
     @Transactional

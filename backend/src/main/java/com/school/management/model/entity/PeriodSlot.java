@@ -28,6 +28,9 @@ public class PeriodSlot {
     @Column(name = "day_of_week", nullable = false, length = 20)
     private DayOfWeek dayOfWeek;
 
+    @Column(length = 10)
+    private String date;
+
     /** Period number within the day (1–8). */
     @Column(name = "period_number", nullable = false)
     private Integer periodNumber;

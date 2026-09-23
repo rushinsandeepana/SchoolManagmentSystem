@@ -1,6 +1,6 @@
 spring:
   config:
-    import: optional:file:.env[.properties]
+    import: file:./.env[.properties]
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5433/school_management}
     username: ${DB_USERNAME:postgres}
@@ -11,21 +11,40 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        format_sql: true
-
-server:
-  port: ${SERVER_PORT:8080}
+        '[format_sql]': true
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        debug: true
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
   servlet:
     multipart:
       max-file-size: 50MB
       max-request-size: 55MB
-
+logging:
+  file:
+    name: logs/application.log
+  level:
+    root: INFO
+server:
+  port: ${SERVER_PORT:8080}
 app:
   jwt:
     secret: ${JWT_SECRET:SchoolManagementSystemSecretKeyForJwtTokensMustBeLongEnough2026}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   upload:
     dir: ${UPLOAD_DIR:uploads}
+  frontend-url: ${FRONTEND_URL:http://localhost:5173}
 
 cors:
   allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}

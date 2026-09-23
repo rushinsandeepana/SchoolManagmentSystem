@@ -84,6 +84,7 @@
     "noteTitleRequired": "Note title is required",
     "noteContentRequired": "Note content is required",
     "dayRequired": "Day is required",
+    "weekendDay": "You added a weekend day. Therefore, it is not valid. Please add a valid day.",
     "periodRequired": "Period is required",
     "periodTypeRequired": "Period type is required",
     "classRequired": "Class is required",

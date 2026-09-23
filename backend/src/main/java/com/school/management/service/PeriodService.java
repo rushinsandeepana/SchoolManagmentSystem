@@ -52,9 +52,10 @@ public class PeriodService {
                 query,
                 periodType,
                 PageRequest.of(safePage, safeSize, Sort.by(
-                    Sort.Order.asc("dayOfWeek"),
-                    Sort.Order.asc("periodNumber"),
-                    Sort.Order.asc("teacher.fullName")))),
+                    Sort.Order.desc("id")
+                    // Sort.Order.asc("periodNumber"),
+                    // Sort.Order.asc("teacher.fullName")
+                ))),
             EntityMapper::toPeriodSlotResponse);
     }
 
@@ -79,6 +80,7 @@ public class PeriodService {
                         .build());
 
         slot.setPeriodType(request.getPeriodType());
+        slot.setDate(request.getDate());
         slot.setSubject(request.getSubject());
         slot.setClassName(request.getClassName());
         slot.setTitle(request.getTitle());

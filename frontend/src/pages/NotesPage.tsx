@@ -25,7 +25,7 @@ type TeacherOption = {
 
 export default function NotesPage() {
   const { t } = useTranslation()
-  const { user } = useAuth()
+  const user = useAuth()?.user
   const { showToast } = useToast()
   const [teachers, setTeachers] = useState<TeacherOption[]>([])
   const [teacherId, setTeacherId] = useState('')

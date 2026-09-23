@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import Footer from './Footer'
+import { Button, IconButton, SelectControl } from './ui'
 
 export default function Layout() {
   const { t, i18n } = useTranslation()
@@ -51,35 +52,47 @@ export default function Layout() {
     <div className="flex min-h-screen flex-col md:grid md:h-screen md:grid-cols-[220px_1fr] md:grid-rows-[auto_1fr_auto] md:overflow-hidden">
       <header className="sticky top-0 z-40 flex items-center justify-between gap-3 bg-nav px-3 py-3 text-nav-text shadow-card sm:px-4 md:col-span-full">
         <div className="flex min-w-0 items-center gap-2">
-          <button
-            className="icon-btn shrink-0 md:hidden"
-            type="button"
-            aria-label="Menu"
+          <IconButton
+            className="shrink-0 md:hidden"
+            label="Menu"
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
           >
             ☰
-          </button>
+          </IconButton>
           <div className="truncate font-display text-base font-bold tracking-tight sm:text-lg">
             {t('app.name')}
           </div>
         </div>
         <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
-          <button className="icon-btn text-xs sm:text-sm" type="button" onClick={toggleTheme}>
-            {theme === 'light' ? t('common.darkMode') : t('common.lightMode')}
-          </button>
-          <select
+          <IconButton
+            label={theme === 'light' ? t('common.darkMode') : t('common.lightMode')}
+            onClick={toggleTheme}
+          >
+            {theme === 'light' ? (
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+              </svg>
+            ) : (
+              <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
+              </svg>
+            )}
+          </IconButton>
+          <SelectControl
             aria-label={t('common.language')}
             value={i18n.language?.startsWith('si') ? 'si' : 'en'}
-            onChange={(e) => switchLang(e.target.value)}
+            onChange={(e: { target: { value: string | undefined } }) => switchLang(e.target.value)}
             className="w-auto rounded-[10px] border border-white/25 bg-transparent px-2 py-1.5 text-nav-text"
-          >
-            <option value="en">{t('common.english')}</option>
-            <option value="si">{t('common.sinhala')}</option>
-          </select>
-          <button className="icon-btn text-xs sm:text-sm" type="button" onClick={onLogout}>
+            options={[
+              { value: 'en', label: t('common.english') },
+              { value: 'si', label: t('common.sinhala') },
+            ]}
+          />
+          <Button variant="nav" size="sm" onClick={onLogout}>
             {t('auth.logout')}
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -103,6 +116,7 @@ export default function Layout() {
 
       <aside className="hidden min-h-0 flex-col gap-1 overflow-y-auto border-r border-border bg-surface px-3 py-4 md:flex">
         <div className="mb-2 truncate px-3.5 text-sm text-muted">{user?.fullName}</div>
+        <hr className="border-1 border-slate-400 dark:border-slate-700" />
         {links.map((l) => (
           <NavLink
             key={l.to}

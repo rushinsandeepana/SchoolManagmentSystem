@@ -53,7 +53,7 @@ public class SubjectService {
         int safeSize = size <= 0 ? 10 : Math.min(size, 100);
         String query = search == null ? "" : search.trim();
         return PageResponse.from(
-                subjectRepository.search(query, PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.ASC, "subjectName"))),
+                subjectRepository.search(query, PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "id"))),
                 EntityMapper::toSubjectResponse);
     }
 

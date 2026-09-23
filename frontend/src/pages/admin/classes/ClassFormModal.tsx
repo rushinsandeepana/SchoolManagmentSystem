@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import type { ChangeEvent, FormEvent } from 'react'
 import Modal from '../../../components/Modal'
-import { Button, InputField, OptionGroup, SelectField } from '../../../components/ui'
+import { Button, InputField, OptionGroup, SelectField, TextareaField } from '../../../components/ui'
 import type { ClassForm } from '../../../types/class'
 import { AssignmentErrors } from '../periods/AssignPeriodFormModal'
 
@@ -94,16 +94,14 @@ export default function ClassFormModal({
             }))}
           />
 
-          <label className="ui-field sm:col-span-2">
-            <span className="ui-field__label">{t('class.fields.description')}</span>
-            <textarea
-              className="ui-input min-h-24"
-              name="description"
-              value={form.description}
-              onChange={onChange}
-              placeholder={t('class.placeholders.description')}
-            />
-          </label>
+          <TextareaField
+            className="min-h-24 sm:col-span-2"
+            label={t('class.fields.description')}
+            name="description"
+            value={form.description}
+            onChange={onChange}
+            placeholder={t('class.placeholders.description')}
+          />
 
           <SelectField
             label={t('class.fields.status')}

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import type { InputHTMLAttributes, SelectHTMLAttributes } from 'react'
+import { createPortal } from 'react-dom'
+import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react'
 
 type SelectOption = {
   value: string
@@ -15,6 +16,11 @@ type SelectFieldProps = SelectHTMLAttributes<HTMLSelectElement> & {
   label?: string
   options: SelectOption[]
   placeholder?: string
+  error?: string
+}
+
+type TextareaFieldProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  label?: string
   error?: string
 }
 
@@ -49,20 +55,112 @@ export function InputField({ label, className = '', error, ...props }: InputFiel
 }
 
 export function SelectField({ label, options, placeholder, className = '', error, ...props }: SelectFieldProps) {
-  const selectClass = className ? `ui-select ${className}` : 'ui-select'
+  const { name, value = '', onChange, disabled, required, title, id } = props
+  const [open, setOpen] = useState(false)
+  const [menuStyle, setMenuStyle] = useState<React.CSSProperties>({})
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const selectedOption = options.find((option) => String(option.value) === String(value))
+
+  useEffect(() => {
+    if (!open) return undefined
+
+    const updateMenuPosition = () => {
+      const trigger = triggerRef.current?.getBoundingClientRect()
+      if (!trigger) return
+
+      const menuHeight = Math.min((options.length + (placeholder ? 1 : 0)) * 36 + 8, 188)
+      const spaceBelow = window.innerHeight - trigger.bottom
+      const top = spaceBelow >= menuHeight || trigger.top < menuHeight
+        ? trigger.bottom + 4
+        : trigger.top - menuHeight - 4
+
+      setMenuStyle({ left: trigger.left, top, width: trigger.width })
+    }
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (!triggerRef.current?.contains(target) && !menuRef.current?.contains(target)) {
+        setOpen(false)
+      }
+    }
+
+    updateMenuPosition()
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    window.addEventListener('resize', updateMenuPosition)
+    window.addEventListener('scroll', updateMenuPosition, true)
+
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick)
+      window.removeEventListener('resize', updateMenuPosition)
+      window.removeEventListener('scroll', updateMenuPosition, true)
+    }
+  }, [open, options.length, placeholder])
+
+  const selectOption = (nextValue: string) => {
+    const target = { name: name || '', value: nextValue } as HTMLSelectElement
+    onChange?.({ target, currentTarget: target } as React.ChangeEvent<HTMLSelectElement>)
+    setOpen(false)
+  }
+
   const isRequired = Boolean(props.required)
 
   return (
     <label className="ui-field">
       {label && <span className="ui-field__label">{label}{isRequired && <span className="required-mark"> *</span>}</span>}
-      <select className={selectClass} {...props}>
-        {placeholder && <option value="" disabled>{placeholder}</option>}
-        {options.map((option) => (
-          <option key={String(option.value)} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <div ref={triggerRef} className="ui-select-wrapper">
+        <button
+          id={id}
+          type="button"
+          className={`ui-select ui-select-trigger ${className}`.trim()}
+          title={title}
+          disabled={disabled}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          onClick={() => setOpen((current) => !current)}
+        >
+          <span className={!selectedOption ? 'ui-select-placeholder' : ''}>
+            {selectedOption?.label || placeholder || ''}
+          </span>
+          <span className="ui-select-chevron" aria-hidden="true">⌄</span>
+        </button>
+        <input type="hidden" name={name} value={String(value)} required={required} />
+        {open && createPortal(
+          <div ref={menuRef} className="ui-select-menu" style={menuStyle} role="listbox">
+            {placeholder && (
+              <button type="button" className="ui-select-option ui-select-placeholder" onClick={() => selectOption('')}>
+                {placeholder}
+              </button>
+            )}
+            {options.map((option) => (
+              <button
+                key={String(option.value)}
+                type="button"
+                role="option"
+                aria-selected={String(option.value) === String(value)}
+                className={`ui-select-option${String(option.value) === String(value) ? ' selected' : ''}`}
+                onClick={() => selectOption(String(option.value))}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>,
+          document.body,
+        )}
+      </div>
+      {error && <span className="ui-field__error">{error}</span>}
+    </label>
+  )
+}
+
+export function TextareaField({ label, className = '', error, ...props }: TextareaFieldProps) {
+  const textareaClass = className ? `ui-input ${className}` : 'ui-input'
+  const isRequired = Boolean(props.required)
+
+  return (
+    <label className="ui-field">
+      {label && <span className="ui-field__label">{label}{isRequired && <span className="required-mark"> *</span>}</span>}
+      <textarea className={textareaClass} {...props} />
       {error && <span className="ui-field__error">{error}</span>}
     </label>
   )

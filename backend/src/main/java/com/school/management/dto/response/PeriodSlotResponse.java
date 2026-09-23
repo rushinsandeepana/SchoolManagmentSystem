@@ -12,6 +12,7 @@ public class PeriodSlotResponse {
     private Long teacherId;
     private String teacherName;
     private DayOfWeek dayOfWeek;
+    private String date;
     private Integer periodNumber;
     private PeriodType periodType;
     private String subject;

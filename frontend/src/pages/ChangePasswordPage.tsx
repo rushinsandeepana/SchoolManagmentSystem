@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import api from '../services/api'
 import { useToast } from '../context/ToastContext'
+import { Button, InputField } from '../components/ui'
 
 export default function ChangePasswordPage() {
   const { t } = useTranslation()
@@ -28,32 +29,30 @@ export default function ChangePasswordPage() {
       </div>
       <div className="card w-full max-w-md">
         <form className="form" onSubmit={onSubmit}>
-          <label>
-            {t('auth.currentPassword')}<span className="required-mark"> *</span>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder={t('auth.placeholders.currentPassword')}
-              title={t('validation.currentPasswordRequired')}
-              required
-            />
-          </label>
-          <label>
-            {t('auth.newPassword')}<span className="required-mark"> *</span>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder={t('auth.placeholders.newPassword')}
-              title={t('validation.newPasswordRequired')}
-              required
-              minLength={4}
-            />
-          </label>
-          <button className="btn w-full sm:w-auto" type="submit">
+          <InputField
+            label={t('auth.currentPassword')}
+            type="password"
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            placeholder={t('auth.placeholders.currentPassword')}
+            title={t('validation.currentPasswordRequired')}
+            autoComplete="current-password"
+            required
+          />
+          <InputField
+            label={t('auth.newPassword')}
+            type="password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            placeholder={t('auth.placeholders.newPassword')}
+            title={t('validation.newPasswordRequired')}
+            autoComplete="new-password"
+            required
+            minLength={4}
+          />
+          <Button type="submit" className="w-full sm:w-auto">
             {t('common.save')}
-          </button>
+          </Button>
         </form>
       </div>
     </div>
