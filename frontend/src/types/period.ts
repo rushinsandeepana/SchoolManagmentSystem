@@ -16,6 +16,7 @@ export type PeriodSlot = {
   teacherId: number
   teacherName: string
   dayOfWeek: string
+  date: string
   periodNumber: number
   periodType: PeriodType
   subject?: string

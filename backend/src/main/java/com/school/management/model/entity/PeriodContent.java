@@ -18,8 +18,8 @@ public class PeriodContent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "period_slot_id", nullable = false, unique = true)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "period_slot_id", nullable = false)
     private PeriodSlot periodSlot;
 
     @Column(length = 200)

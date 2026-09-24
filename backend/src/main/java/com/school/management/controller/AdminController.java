@@ -74,7 +74,6 @@ public class AdminController {
 
     @PostMapping("/periods")
     public PeriodSlotResponse assignPeriod(@Valid @RequestBody AssignPeriodRequest request) {
-        log.info("AssignPeriodRequest: {}", request);
         return periodService.assignPeriod(request);
     }
 

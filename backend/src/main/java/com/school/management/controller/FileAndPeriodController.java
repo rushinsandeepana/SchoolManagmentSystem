@@ -3,6 +3,7 @@ package com.school.management.controller;
 import com.school.management.dto.request.PeriodContentRequest;
 import com.school.management.dto.response.ApiMessage;
 import com.school.management.dto.response.MediaFileResponse;
+import com.school.management.dto.response.PeriodContentResponse;
 import com.school.management.dto.response.PeriodDetailResponse;
 import com.school.management.model.entity.MediaFile;
 import com.school.management.security.UserPrincipal;
@@ -32,20 +33,32 @@ public class FileAndPeriodController {
         return periodService.getPeriodDetail(id, principal);
     }
 
-    @PutMapping("/periods/{id}/content")
-    public PeriodDetailResponse upsertContent(
+    @PostMapping("/periods/{id}/content")
+    public PeriodContentResponse createContent(
             @PathVariable Long id,
             @RequestBody PeriodContentRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return periodService.upsertContent(id, request, principal);
-    }
 
-    @PostMapping("/periods/{id}/files")
+        return periodService.createContent(
+                id,
+                request,
+                principal
+        );
+}
+
+    @PostMapping("/periods/{periodId}/content/{contentId}/files")
     public MediaFileResponse upload(
-            @PathVariable Long id,
+            @PathVariable Long periodId,
+            @PathVariable Long contentId,
             @RequestParam("file") MultipartFile file,
             @AuthenticationPrincipal UserPrincipal principal) {
-        return fileStorageService.store(id, file, principal);
+
+        return fileStorageService.store(
+                periodId,
+                contentId,
+                file,
+                principal
+        );
     }
 
     @GetMapping("/files/{id}/download")
@@ -67,5 +80,18 @@ public class FileAndPeriodController {
             @AuthenticationPrincipal UserPrincipal principal) {
         fileStorageService.delete(id, principal);
         return new ApiMessage("File deleted");
+    }
+
+    @DeleteMapping("/periods/{periodId}/content/{contentId}")
+    public void deleteContent(
+            @PathVariable Long periodId,
+            @PathVariable Long contentId,
+            @AuthenticationPrincipal UserPrincipal principal) {
+
+        periodService.deleteContent(
+                periodId,
+                contentId,
+                principal
+        );
     }
 }

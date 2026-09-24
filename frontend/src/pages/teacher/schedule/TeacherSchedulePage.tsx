@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import WeekSchedule from '../../../components/WeekSchedule'
+import WeekSchedule from './WeekSchedule'
 import { teacherApi } from '../../../api/teacherApi'
 import type { PeriodSlot } from '../../../types/period'
 

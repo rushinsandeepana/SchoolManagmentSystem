@@ -8,6 +8,7 @@ import com.school.management.dto.response.UserResponse;
 import com.school.management.exception.BadRequestException;
 import com.school.management.exception.ResourceNotFoundException;
 import com.school.management.mapper.EntityMapper;
+import com.school.management.model.entity.PeriodContent;
 import com.school.management.model.entity.User;
 import com.school.management.model.enums.Role;
 import com.school.management.repository.MediaFileRepository;
@@ -123,7 +124,14 @@ public class TeacherService {
     public void deleteTeacher(Long id) {
         User teacher = requireTeacher(id);
         periodSlotRepository.findByTeacherIdOrderByDayOfWeekAscPeriodNumberAsc(id).forEach(slot -> {
-            mediaFileRepository.deleteByPeriodSlotId(slot.getId());
+
+            List<PeriodContent> contents =
+                    periodContentRepository.findByPeriodSlotIdOrderByIdAsc(slot.getId());
+
+            for (PeriodContent content : contents) {
+                mediaFileRepository.deleteByPeriodContentId(content.getId());
+            }
+
             periodContentRepository.deleteByPeriodSlotId(slot.getId());
         });
         periodSlotRepository.deleteByTeacherId(id);

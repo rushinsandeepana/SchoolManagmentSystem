@@ -54,6 +54,7 @@ public final class EntityMapper {
                 .teacherId(slot.getTeacher().getId())
                 .teacherName(slot.getTeacher().getFullName())
                 .dayOfWeek(slot.getDayOfWeek())
+                .date(slot.getDate())
                 .periodNumber(slot.getPeriodNumber())
                 .periodType(slot.getPeriodType())
                 .subject(slot.getSubject())

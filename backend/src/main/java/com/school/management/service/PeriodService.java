@@ -3,6 +3,7 @@ package com.school.management.service;
 import com.school.management.dto.request.AssignPeriodRequest;
 import com.school.management.dto.request.PeriodContentRequest;
 import com.school.management.dto.response.PageResponse;
+import com.school.management.dto.response.PeriodContentResponse;
 import com.school.management.dto.response.PeriodDetailResponse;
 import com.school.management.dto.response.PeriodSlotResponse;
 import com.school.management.exception.BadRequestException;
@@ -19,6 +20,8 @@ import com.school.management.repository.PeriodSlotRepository;
 import com.school.management.repository.UserRepository;
 import com.school.management.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +30,7 @@ import org.springframework.data.domain.Sort;
 import java.time.Instant;
 import java.util.List;
 
+@Slf4j 
 @Service
 @RequiredArgsConstructor
 public class PeriodService {
@@ -60,6 +64,7 @@ public class PeriodService {
     }
 
     public List<PeriodSlotResponse> getTeacherSchedule(Long teacherId) {
+        log.info("teacherId: {}", teacherId);
         teacherService.requireTeacher(teacherId);
         return periodSlotRepository.findByTeacherIdOrderByDayOfWeekAscPeriodNumberAsc(teacherId).stream()
                 .map(EntityMapper::toPeriodSlotResponse)
@@ -91,7 +96,14 @@ public class PeriodService {
     @Transactional
     public void deletePeriod(Long periodId) {
         PeriodSlot slot = requireSlot(periodId);
-        mediaFileRepository.deleteByPeriodSlotId(slot.getId());
+
+        List<PeriodContent> contents =
+                periodContentRepository.findByPeriodSlotIdOrderByIdAsc(slot.getId());
+
+        for (PeriodContent content : contents) {
+            mediaFileRepository.deleteByPeriodContentId(content.getId());
+        }
+
         periodContentRepository.deleteByPeriodSlotId(slot.getId());
         periodSlotRepository.delete(slot);
     }
@@ -100,33 +112,59 @@ public class PeriodService {
         PeriodSlot slot = requireSlot(periodId);
         assertCanAccess(slot, currentUser);
 
-        PeriodContent content = periodContentRepository.findByPeriodSlotId(periodId).orElse(null);
+        List<PeriodContent> contents =
+                periodContentRepository.findByPeriodSlotIdOrderByIdAsc(periodId);
+
+        List<PeriodContentResponse> contentResponses = contents.stream()
+                .map(content -> PeriodContentResponse.builder()
+                        .id(content.getId())
+                        .activityTitle(content.getActivityTitle())
+                        .activityDescription(content.getActivityDescription())
+                        .notes(content.getNotes())
+                        .updatedAt(content.getUpdatedAt())
+                        .files(
+                                mediaFileRepository
+                                        .findByPeriodContentIdOrderByUploadedAtDesc(content.getId())
+                                        .stream()
+                                        .map(EntityMapper::toMediaFileResponse)
+                                        .toList()
+                        )
+                        .build())
+                .toList();
+
         return PeriodDetailResponse.builder()
                 .slot(EntityMapper.toPeriodSlotResponse(slot))
-                .activityTitle(content != null ? content.getActivityTitle() : null)
-                .activityDescription(content != null ? content.getActivityDescription() : null)
-                .notes(content != null ? content.getNotes() : null)
-                .updatedAt(content != null ? content.getUpdatedAt() : null)
-                .files(mediaFileRepository.findByPeriodSlotIdOrderByUploadedAtDesc(periodId).stream()
-                        .map(EntityMapper::toMediaFileResponse)
-                        .toList())
+                .contents(contentResponses)
                 .build();
     }
 
     @Transactional
-    public PeriodDetailResponse upsertContent(Long periodId, PeriodContentRequest request, UserPrincipal currentUser) {
+    public PeriodContentResponse createContent(
+            Long periodId,
+            PeriodContentRequest request,
+            UserPrincipal currentUser) {
+
         PeriodSlot slot = requireSlot(periodId);
         assertCanAccess(slot, currentUser);
 
-        PeriodContent content = periodContentRepository.findByPeriodSlotId(periodId)
-                .orElse(PeriodContent.builder().periodSlot(slot).build());
-        content.setActivityTitle(request.getActivityTitle());
-        content.setActivityDescription(request.getActivityDescription());
-        content.setNotes(request.getNotes());
-        content.setUpdatedAt(Instant.now());
-        periodContentRepository.save(content);
+        PeriodContent content = PeriodContent.builder()
+                .periodSlot(slot)
+                .activityTitle(request.getActivityTitle())
+                .activityDescription(request.getActivityDescription())
+                .notes(request.getNotes())
+                .updatedAt(Instant.now())
+                .build();
 
-        return getPeriodDetail(periodId, currentUser);
+        PeriodContent saved = periodContentRepository.save(content);
+
+        return PeriodContentResponse.builder()
+                .id(saved.getId())
+                .activityTitle(saved.getActivityTitle())
+                .activityDescription(saved.getActivityDescription())
+                .notes(saved.getNotes())
+                .updatedAt(saved.getUpdatedAt())
+                .files(List.of())
+                .build();
     }
 
     public PeriodSlot requireSlot(Long id) {
@@ -146,5 +184,30 @@ public class PeriodService {
     public User requireUser(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
+
+    @Transactional
+    public void deleteContent(
+            Long periodId,
+            Long contentId,
+            UserPrincipal currentUser) {
+
+        PeriodSlot slot = requireSlot(periodId);
+        assertCanAccess(slot, currentUser);
+
+        PeriodContent content = periodContentRepository
+                .findById(contentId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Period content not found"));
+
+        if (!content.getPeriodSlot().getId().equals(periodId)) {
+            throw new BadRequestException(
+                    "Content does not belong to this period");
+        }
+
+        mediaFileRepository.deleteByPeriodContentId(contentId);
+
+        periodContentRepository.delete(content);
     }
 }

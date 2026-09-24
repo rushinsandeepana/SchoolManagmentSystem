@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { IconButton } from './ui'
+import { IconButton } from '../../../components/ui'
 
 const DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']
 
@@ -9,6 +9,7 @@ export default function WeekSchedule({ slots }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [weekOffset, setWeekOffset] = useState(0)
+console.log("slots", slots);
 
   const navigationBounds = useMemo(() => {
     const today = new Date()
@@ -57,6 +58,13 @@ export default function WeekSchedule({ slots }) {
   const formatDate = (date: Date) =>
     date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 
+  const dateKey = (date: Date) => {
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+    return `${year}-${month}-${day}`
+  }
+
   const weekRange = `${formatDate(weekDates[0])} - ${weekDates[4].toLocaleDateString(undefined, {
     month: 'short',
     day: 'numeric',
@@ -64,11 +72,13 @@ export default function WeekSchedule({ slots }) {
   })}`
 
   const map = useMemo(() => {
-    const m = {}
+    const byDate = {}
     for (const s of slots || []) {
-      m[`${s.dayOfWeek}-${s.periodNumber}`] = s
+      if (s.date) {
+        byDate[`${s.date}-${s.periodNumber}`] = s
+      }
     }
-    return m
+    return byDate
   }, [slots])
 
   return (
@@ -113,8 +123,8 @@ export default function WeekSchedule({ slots }) {
         {Array.from({ length: 8 }, (_, i) => i + 1).map((period) => (
           <div className="schedule-row" key={period}>
             <div className="day-label">P{period}</div>
-            {DAYS.map((day) => {
-              const slot = map[`${day}-${period}`]
+            {DAYS.map((day, index) => {
+              const slot = map[`${dateKey(weekDates[index])}-${period}`]
               if (!slot) {
                 return (
                   <div key={day} className="period-cell FREE" style={{ opacity: 0.5, cursor: 'default' }}>

@@ -16,6 +16,8 @@ import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.school.management.model.entity.PeriodContent;
+import com.school.management.repository.PeriodContentRepository;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -31,6 +33,7 @@ import java.util.UUID;
 public class FileStorageService {
 
     private final MediaFileRepository mediaFileRepository;
+    private final PeriodContentRepository periodContentRepository;
     private final PeriodService periodService;
 
     @Value("${app.upload.dir}")
@@ -45,47 +48,92 @@ public class FileStorageService {
     }
 
     @Transactional
-    public MediaFileResponse store(Long periodId, MultipartFile file, UserPrincipal currentUser) {
+    public MediaFileResponse store(
+            Long periodId,
+            Long contentId,
+            MultipartFile file,
+            UserPrincipal currentUser) {
+
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("File is empty");
         }
-        PeriodSlot slot = periodService.requireSlot(periodId);
+
+        PeriodContent content = periodContentRepository.findById(contentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Period content not found"));
+
+        PeriodSlot slot = content.getPeriodSlot();
+
+        if (!slot.getId().equals(periodId)) {
+            throw new BadRequestException(
+                    "Content does not belong to this period");
+        }
+
         periodService.assertCanAccess(slot, currentUser);
 
-        String original = file.getOriginalFilename() != null ? file.getOriginalFilename() : "file";
-        String stored = UUID.randomUUID() + "_" + original.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String original = file.getOriginalFilename() != null
+                ? file.getOriginalFilename()
+                : "file";
+
+        String stored = UUID.randomUUID()
+                + "_"
+                + original.replaceAll("[^a-zA-Z0-9._-]", "_");
 
         try {
             Path target = root.resolve(stored);
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+            Files.copy(
+                    file.getInputStream(),
+                    target,
+                    StandardCopyOption.REPLACE_EXISTING
+            );
+
         } catch (IOException e) {
-            throw new BadRequestException("Failed to store file: " + e.getMessage());
+            throw new BadRequestException(
+                    "Failed to store file: " + e.getMessage());
         }
 
         MediaFile media = MediaFile.builder()
-                .periodSlot(slot)
+                .periodContent(content)
                 .uploadedBy(currentUser.getUser())
                 .originalFileName(original)
                 .storedFileName(stored)
-                .contentType(file.getContentType() != null ? file.getContentType() : "application/octet-stream")
+                .contentType(
+                        file.getContentType() != null
+                                ? file.getContentType()
+                                : "application/octet-stream"
+                )
                 .fileSize(file.getSize())
-                .fileCategory(categorize(original, file.getContentType()))
+                .fileCategory(
+                        categorize(original, file.getContentType())
+                )
                 .build();
 
-        return EntityMapper.toMediaFileResponse(mediaFileRepository.save(media));
+        return EntityMapper.toMediaFileResponse(
+                mediaFileRepository.save(media)
+        );
     }
 
-    public Resource loadAsResource(Long fileId, UserPrincipal currentUser) {
+    public Resource loadAsResource( Long fileId, UserPrincipal currentUser) {
+
         MediaFile media = mediaFileRepository.findById(fileId)
                 .orElseThrow(() -> new ResourceNotFoundException("File not found"));
-        periodService.assertCanAccess(media.getPeriodSlot(), currentUser);
+
+        periodService.assertCanAccess(
+                media.getPeriodContent().getPeriodSlot(),
+                currentUser
+        );
+
         try {
             Path file = root.resolve(media.getStoredFileName());
+
             Resource resource = new UrlResource(file.toUri());
+
             if (!resource.exists() || !resource.isReadable()) {
                 throw new ResourceNotFoundException("File not readable");
             }
+
             return resource;
+
         } catch (MalformedURLException e) {
             throw new ResourceNotFoundException("File not found");
         }
@@ -97,14 +145,25 @@ public class FileStorageService {
     }
 
     @Transactional
-    public void delete(Long fileId, UserPrincipal currentUser) {
+    public void delete(
+            Long fileId,
+            UserPrincipal currentUser) {
+
         MediaFile media = mediaFileRepository.findById(fileId)
                 .orElseThrow(() -> new ResourceNotFoundException("File not found"));
-        periodService.assertCanAccess(media.getPeriodSlot(), currentUser);
+
+        periodService.assertCanAccess(
+                media.getPeriodContent().getPeriodSlot(),
+                currentUser
+        );
+
         try {
-            Files.deleteIfExists(root.resolve(media.getStoredFileName()));
+            Files.deleteIfExists(
+                    root.resolve(media.getStoredFileName())
+            );
         } catch (IOException ignored) {
         }
+
         mediaFileRepository.delete(media);
     }
 

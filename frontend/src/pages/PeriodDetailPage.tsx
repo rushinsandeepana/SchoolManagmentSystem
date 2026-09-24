@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { ListControls } from '../components/ui'
+import { Button } from '../components/ui'
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal'
-import { useClientList } from '../hooks/useClientList'
+import { ExternalLink, Trash2 } from 'lucide-react'
 
 type MediaFile = {
   id: number
@@ -16,250 +16,349 @@ type MediaFile = {
   uploadedByName?: string
 }
 
+type PeriodContent = {
+  id: number
+  activityTitle?: string
+  activityDescription?: string
+  notes?: string
+  updatedAt?: string
+  files: MediaFile[]
+}
+
+type DeleteTarget =
+  | { type: 'file'; id: number }
+  | { type: 'activity'; id: number }
+  | null
+
 export default function PeriodDetailPage() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { t } = useTranslation()
   const { user } = useAuth() as { user: { role: string } | null }
   const { showToast } = useToast()
+
+  const [deleteTarget, setDeleteTarget] =
+    useState<DeleteTarget>(null)
+
   const [detail, setDetail] = useState<any>(null)
-  const [form, setForm] = useState({ activityTitle: '', activityDescription: '', notes: '' })
   const [error, setError] = useState('')
-  const [uploading, setUploading] = useState(false)
-  const [fileToDelete, setFileToDelete] = useState<MediaFile | null>(null)
 
-  const files: MediaFile[] = detail?.files || []
-  const fileList = useClientList(files, {
-    searchKeys: ['originalFileName', 'fileCategory', 'uploadedByName'],
-    defaultPageSize: 5,
-  })
-
-  const load = () =>
-    api.get(`/periods/${id}`).then((res) => {
+  const load = async () => {
+    try {
+      const res = await api.get(`/periods/${id}`)
       setDetail(res.data)
-      setForm({
-        activityTitle: res.data.activityTitle || '',
-        activityDescription: res.data.activityDescription || '',
-        notes: res.data.notes || '',
-      })
-    })
+    } catch (err: any) {
+      const message =
+        err.response?.data?.message || t('common.error')
 
-  useEffect(() => {
-    load().catch((err) => {
-      const message = err.response?.data?.message || t('common.error')
       setError(message)
       showToast(message, 'error')
-    })
-  }, [id, showToast])
-
-  const saveContent = async (e: { preventDefault: () => void }) => {
-    e.preventDefault()
-    setError('')
-    try {
-      const res = await api.put(`/periods/${id}/content`, form)
-      setDetail(res.data)
-      showToast(t('common.updated'), 'success')
-    } catch (err: any) {
-      showToast(err.response?.data?.message || t('common.error'), 'error')
     }
   }
 
-  const onUpload = async (e: any) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setUploading(true)
-    setError('')
-    try {
-      const body = new FormData()
-      body.append('file', file)
-      await api.post(`/periods/${id}/files`, body, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      await load()
-      showToast(t('common.created'), 'success')
-    } catch (err: any) {
-      showToast(err.response?.data?.message || t('period.uploadFailed'), 'error')
-    } finally {
-      setUploading(false)
-      e.target.value = ''
-    }
-  }
-
-  const deleteFile = async () => {
-    if (!fileToDelete) return
-    try {
-      await api.delete(`/files/${fileToDelete.id}`)
-      await load()
-      setFileToDelete(null)
-      showToast(t('common.deleted', 'Deleted successfully'), 'success')
-    } catch (err: any) {
-      showToast(err.response?.data?.message || t('common.error'), 'error')
-    }
-  }
+  useEffect(() => {
+    load()
+  }, [id])
 
   const openFile = async (file: MediaFile) => {
-    const res = await api.get(`/files/${file.id}/download`, { responseType: 'blob' })
-    const url = URL.createObjectURL(res.data)
-    window.open(url, '_blank')
+    try {
+      const res = await api.get(
+        `/files/${file.id}/download`,
+        {
+          responseType: 'blob',
+        }
+      )
+
+      const url = URL.createObjectURL(res.data)
+      window.open(url, '_blank')
+    } catch (err: any) {
+      showToast(
+        err.response?.data?.message ||
+          t('common.error'),
+        'error'
+      )
+    }
   }
 
-  if (!detail && !error) return <div className="muted">{t('common.loading')}</div>
+  const deleteFile = async (fileId: number) => {
+    try {
+      await api.delete(`/files/${fileId}`)
 
-  const backTo = user?.role === 'ADMIN' ? '/admin/periods' : '/teacher'
+      showToast(
+        'File deleted successfully',
+        'success'
+      )
+
+      setDeleteTarget(null)
+      await load()
+    } catch (err: any) {
+      showToast(
+        err.response?.data?.message ||
+          t('common.error'),
+        'error'
+      )
+    }
+  }
+
+  const deleteActivity = async (
+    contentId: number
+  ) => {
+    if (!id) return
+
+    try {
+      await api.delete(
+        `/periods/${id}/content/${contentId}`
+      )
+
+      showToast(
+        'Activity deleted successfully',
+        'success'
+      )
+
+      setDeleteTarget(null)
+      await load()
+    } catch (err: any) {
+      showToast(
+        err.response?.data?.message ||
+          t('common.error'),
+        'error'
+      )
+    }
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) {
+      return
+    }
+
+    if (deleteTarget.type === 'file') {
+      await deleteFile(deleteTarget.id)
+      return
+    }
+
+    await deleteActivity(deleteTarget.id)
+  }
+
+  if (!detail && !error) {
+    return (
+      <div className="muted">
+        {t('common.loading')}
+      </div>
+    )
+  }
+
+  const backTo =
+    user?.role === 'ADMIN'
+      ? '/admin/periods'
+      : '/teacher'
+
   const slot = detail?.slot
+  const contents: PeriodContent[] =
+    detail?.contents || []
 
   return (
-    <div className="fade-in">
-      <div className="section-head">
+    <div className="fade-in min-w-0 overflow-x-hidden">
+      <div className="section-head flex-wrap gap-3">
         <div className="min-w-0">
-          <Link to={backTo} className="muted hover:text-primary">
+          <Link
+            to={backTo}
+            className="muted hover:text-primary"
+          >
             ← {t('period.back')}
           </Link>
+
           <h1 className="mt-1.5 break-words text-2xl sm:text-3xl">
-            {slot ? `${t(`schedule.days.${slot.dayOfWeek}`)} · P${slot.periodNumber}` : t('schedule.period')}
+            {slot
+              ? `${t(
+                  `schedule.days.${slot.dayOfWeek}`
+                )} · P${slot.periodNumber}`
+              : t('schedule.period')}
           </h1>
+
           {slot && (
-            <p className="m-0 flex flex-wrap items-center gap-2 muted">
-              <span className={`badge badge-${slot.periodType.toLowerCase()}`}>
+            <p className="m-0 flex flex-wrap items-center gap-2 muted break-words">
+              <span
+                className={`badge badge-${slot.periodType.toLowerCase()}`}
+              >
                 {t(slot.periodType.toLowerCase())}
               </span>
-              <span>
-                {slot.subject || slot.title || ''} {slot.className ? `· ${slot.className}` : ''}
+
+              <span className="break-words">
+                {slot.subject || slot.title || ''}
+                {slot.className
+                  ? ` · ${slot.className}`
+                  : ''}
               </span>
             </p>
           )}
         </div>
+
+        <Button
+          type="button"
+          onClick={() =>
+            navigate(
+              `/periods/${id}/activity/new`
+            )
+          }
+        >
+          + New Activity
+        </Button>
       </div>
 
-      {error && <div className="alert alert-error">{error}</div>}
+      {error && (
+        <div className="alert alert-error break-words">
+          {error}
+        </div>
+      )}
 
       {detail && (
         <>
-          <div className="card mb-4">
-            <h3>{t('period.activity')}</h3>
-            <form className="form" onSubmit={saveContent}>
-              <label>
-                {t('period.activityTitle')}
-                <input
-                  value={form.activityTitle}
-                  onChange={(e) => setForm((f) => ({ ...f, activityTitle: e.target.value }))}
-                  placeholder={t('period.placeholders.activityTitle')}
-                />
-              </label>
-              <label>
-                {t('period.activityDescription')}
-                <textarea
-                  value={form.activityDescription}
-                  onChange={(e) => setForm((f) => ({ ...f, activityDescription: e.target.value }))}
-                  placeholder={t('period.placeholders.activityDescription')}
-                />
-              </label>
-              <label>
-                {t('period.notes')}
-                <textarea placeholder={t('period.placeholders.notes')} value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
-              </label>
-              <button className="btn w-full sm:w-auto" type="submit">
-                {t('common.save')}
-              </button>
-            </form>
-          </div>
-
-          <div className="card">
-            <div className="section-head mb-3">
-              <h3 className="m-0">{t('period.files')}</h3>
-              <label className="btn btn-sm m-0 cursor-pointer">
-                {uploading ? '...' : t('period.uploadFile')}
-                <input type="file" accept=".pdf,image/*,video/*" hidden onChange={onUpload} disabled={uploading} />
-              </label>
+          {contents.length === 0 ? (
+            <div className="card min-w-0 overflow-hidden">
+              <p className="muted">
+                No activities available for this period.
+              </p>
             </div>
-            <p className="muted">{t('period.uploadHint')}</p>
-            <ListControls
-              searchValue={fileList.search}
-              onSearchChange={fileList.setSearch}
-              searchPlaceholder={t('common.searchPlaceholder')}
-              page={fileList.page}
-              pageSize={fileList.pageSize}
-              totalElements={fileList.totalElements}
-              totalPages={fileList.totalPages}
-              onPageChange={fileList.setPage}
-              onPageSizeChange={fileList.setPageSize}
-            >
-              <div className="file-list">
-                {fileList.content.length === 0 && (
-                  <p className="muted">{fileList.search ? t('common.noResults') : t('period.noFiles')}</p>
-                )}
-                {fileList.content.map((file) => (
-                  <div key={file.id} className="file-item">
-                    <div className="min-w-0 flex-1">
-                      <strong className="break-all">{file.originalFileName}</strong>
-                      <div className="text-xs text-muted">
-                        {file.fileCategory} · {(file.fileSize / 1024).toFixed(1)} KB · {file.uploadedByName}
-                      </div>
-                      {file.fileCategory === 'IMAGE' && (
-                        <AuthImage fileId={file.id} alt={file.originalFileName} />
-                      )}
-                      {file.fileCategory === 'VIDEO' && <AuthVideo fileId={file.id} />}
+          ) : (
+            contents.map((content, index) => (
+              <div
+                className="card mb-4 min-w-0 overflow-hidden"
+                key={content.id}
+              >
+                <div className="section-head mb-3 min-w-0 flex-wrap gap-2">
+                  <h3 className="m-0 min-w-0 break-words">
+                    Activity {index + 1}
+                  </h3>
+
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    type="button"
+                    onClick={() =>
+                      setDeleteTarget({
+                        type: 'activity',
+                        id: content.id,
+                      })
+                    }
+                    title="Delete activity"
+                    aria-label="Delete activity"
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
+
+                <div className="min-w-0 overflow-hidden">
+                  <h4 className="break-words">
+                    {content.activityTitle ||
+                      'No activity title'}
+                  </h4>
+
+                  {content.activityDescription && (
+                    <p className="whitespace-pre-wrap break-words">
+                      {content.activityDescription}
+                    </p>
+                  )}
+
+                  {content.notes && (
+                    <div className="mt-4 min-w-0">
+                      <strong>
+                        {t('period.notes')}
+                      </strong>
+
+                      <p className="whitespace-pre-wrap break-words">
+                        {content.notes}
+                      </p>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      <button className="btn btn-outline btn-sm" type="button" onClick={() => openFile(file)}>
-                        Open
-                      </button>
-                      <button className="btn btn-danger btn-sm" type="button" onClick={() => setFileToDelete(file)}>
-                        {t('common.delete')}
-                      </button>
+                  )}
+
+                  {!content.activityTitle &&
+                    !content.activityDescription &&
+                    !content.notes && (
+                      <p className="muted break-words">
+                        No activity details available.
+                      </p>
+                    )}
+                </div>
+
+                <div className="mt-5 min-w-0 overflow-hidden">
+                  <h4>{t('period.files')}</h4>
+
+                  {content.files?.length === 0 ? (
+                    <p className="muted mt-3">
+                      {t('period.noFiles')}
+                    </p>
+                  ) : (
+                    <div className="file-list mt-3 min-w-0 overflow-hidden">
+                      {content.files.map((file) => (
+                        <div
+                          key={file.id}
+                          className="file-item min-w-0 flex-wrap gap-3 overflow-hidden"
+                        >
+                          <div className="min-w-0 flex-1 overflow-hidden">
+                            <strong className="block break-all">
+                              {file.originalFileName}
+                            </strong>
+
+                            <div className="text-xs text-muted break-words">
+                              {file.fileCategory} ·{' '}
+                              {(
+                                file.fileSize / 1024
+                              ).toFixed(1)}{' '}
+                              KB
+                              {file.uploadedByName
+                                ? ` · ${file.uploadedByName}`
+                                : ''}
+                            </div>
+                          </div>
+
+                          <div className="flex shrink-0 gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              type="button"
+                              onClick={() =>
+                                openFile(file)
+                              }
+                              title="Open file"
+                              aria-label="Open file"
+                            >
+                              <ExternalLink size={16} />
+                            </Button>
+
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              type="button"
+                              onClick={() =>
+                                setDeleteTarget({
+                                  type: 'file',
+                                  id: file.id,
+                                })
+                              }
+                              title="Delete file"
+                              aria-label="Delete file"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                ))}
+                  )}
+                </div>
               </div>
-            </ListControls>
-          </div>
+            ))
+          )}
         </>
       )}
 
       <ConfirmDeleteModal
-        open={fileToDelete !== null}
-        onClose={() => setFileToDelete(null)}
-        onConfirm={deleteFile}
+        open={deleteTarget !== null}
+        onClose={() =>
+          setDeleteTarget(null)
+        }
+        onConfirm={confirmDelete}
       />
-    </div>
-  )
-}
-
-function AuthImage({ fileId, alt }: { fileId: number; alt: string }) {
-  const [src, setSrc] = useState<string | null>(null)
-  useEffect(() => {
-    let url: string | undefined
-    api.get(`/files/${fileId}/download`, { responseType: 'blob' }).then((res) => {
-      url = URL.createObjectURL(res.data)
-      setSrc(url)
-    })
-    return () => {
-      if (url) URL.revokeObjectURL(url)
-    }
-  }, [fileId])
-  if (!src) return null
-  return (
-    <div className="media-preview">
-      <img src={src} alt={alt} />
-    </div>
-  )
-}
-
-function AuthVideo({ fileId }: { fileId: number }) {
-  const [src, setSrc] = useState<string | null>(null)
-  useEffect(() => {
-    let url: string | undefined
-    api.get(`/files/${fileId}/download`, { responseType: 'blob' }).then((res) => {
-      url = URL.createObjectURL(res.data)
-      setSrc(url)
-    })
-    return () => {
-      if (url) URL.revokeObjectURL(url)
-    }
-  }, [fileId])
-  if (!src) return null
-  return (
-    <div className="media-preview">
-      <video src={src} controls />
     </div>
   )
 }

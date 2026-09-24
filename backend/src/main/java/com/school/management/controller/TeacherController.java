@@ -37,13 +37,13 @@ public class TeacherController {
         return periodService.getPeriodDetail(id, principal);
     }
 
-    @PutMapping("/periods/{id}/content")
-    public PeriodDetailResponse upsertContent(
-            @PathVariable Long id,
-            @RequestBody PeriodContentRequest request,
-            @AuthenticationPrincipal UserPrincipal principal) {
-        return periodService.upsertContent(id, request, principal);
-    }
+    // @PutMapping("/periods/{id}/content")
+    // public PeriodDetailResponse upsertContent(
+    //         @PathVariable Long id,
+    //         @RequestBody PeriodContentRequest request,
+    //         @AuthenticationPrincipal UserPrincipal principal) {
+    //     return periodService.upsertContent(id, request, principal);
+    // }
 
     @GetMapping("/notes")
     public PageResponse<TeacherNoteResponse> myNotes(

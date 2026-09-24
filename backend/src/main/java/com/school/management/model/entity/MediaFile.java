@@ -19,8 +19,8 @@ public class MediaFile {
     private Long id;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "period_slot_id", nullable = false)
-    private PeriodSlot periodSlot;
+    @JoinColumn(name = "period_content_id", nullable = false)
+    private PeriodContent periodContent;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "uploaded_by", nullable = false)

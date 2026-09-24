@@ -8,11 +8,17 @@ import java.util.List;
 
 @Data
 @Builder
-public class PeriodDetailResponse {
+public class PeriodContentResponse {
 
-    private PeriodSlotResponse slot;
+    private Long id;
 
-    private List<PeriodContentResponse> contents;
+    private String activityTitle;
+
+    private String activityDescription;
+
+    private String notes;
+
+    private Instant updatedAt;
 
     private List<MediaFileResponse> files;
 }
