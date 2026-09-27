@@ -2,6 +2,7 @@ package com.school.management.service;
 
 import com.school.management.dto.request.AssignPeriodRequest;
 import com.school.management.dto.request.PeriodContentRequest;
+import com.school.management.dto.request.UpdatePeriodContentRequest;
 import com.school.management.dto.response.PageResponse;
 import com.school.management.dto.response.PeriodContentResponse;
 import com.school.management.dto.response.PeriodDetailResponse;
@@ -164,6 +165,36 @@ public class PeriodService {
                 .notes(saved.getNotes())
                 .updatedAt(saved.getUpdatedAt())
                 .files(List.of())
+                .build();
+    }
+
+    @Transactional 
+    public PeriodContentResponse updateContent(
+        Long periodId,
+        Long contendId,
+        UpdatePeriodContentRequest request
+    ) {
+        PeriodContent content = periodContentRepository
+        .findById(contendId)
+            .orElseThrow(() -> new RuntimeException("Period content not found"));
+
+        if (!content.getPeriodSlot().getId().equals(periodId)) {
+            throw new RuntimeException("Content does not belong to the specified period");
+        }
+
+        content.setActivityTitle(request.getActivityTitle());
+        content.setActivityDescription(request.getActivityDescription());
+        content.setNotes(request.getNotes());
+
+        PeriodContent updatedContent =
+                periodContentRepository.save(content);
+
+        return PeriodContentResponse.builder()
+                .id(updatedContent.getId())
+                .activityTitle(updatedContent.getActivityTitle())
+                .activityDescription(updatedContent.getActivityDescription())
+                .notes(updatedContent.getNotes())
+                .updatedAt(updatedContent.getUpdatedAt())
                 .build();
     }
 

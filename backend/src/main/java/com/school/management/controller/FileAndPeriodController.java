@@ -1,6 +1,7 @@
 package com.school.management.controller;
 
 import com.school.management.dto.request.PeriodContentRequest;
+import com.school.management.dto.request.UpdatePeriodContentRequest;
 import com.school.management.dto.response.ApiMessage;
 import com.school.management.dto.response.MediaFileResponse;
 import com.school.management.dto.response.PeriodContentResponse;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
 
 @RestController
 @RequestMapping("/api")
@@ -39,12 +41,24 @@ public class FileAndPeriodController {
             @RequestBody PeriodContentRequest request,
             @AuthenticationPrincipal UserPrincipal principal) {
 
-        return periodService.createContent(
-                id,
-                request,
-                principal
-        );
-}
+                return periodService.createContent(
+                        id,
+                        request,
+                        principal
+                );
+        }
+
+        @PutMapping("periods/{periodId}/content/{contentId}")
+        public ResponseEntity<PeriodContentResponse> updateContent(
+                @PathVariable Long periodId,
+                @PathVariable Long contentId,
+                @RequestBody UpdatePeriodContentRequest request
+                ) {
+                PeriodContentResponse response =
+                        periodService.updateContent(periodId, contentId, request);
+
+                return ResponseEntity.ok(response);
+        }
 
     @PostMapping("/periods/{periodId}/content/{contentId}/files")
     public MediaFileResponse upload(

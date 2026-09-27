@@ -9,7 +9,6 @@ export default function WeekSchedule({ slots }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [weekOffset, setWeekOffset] = useState(0)
-console.log("slots", slots);
 
   const navigationBounds = useMemo(() => {
     const today = new Date()

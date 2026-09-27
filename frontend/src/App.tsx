@@ -14,6 +14,7 @@ import ChangePasswordPage from './pages/ChangePasswordPage'
 import SubjectsPage from './pages/admin/subject/SubjectsPage'
 import ClassesPage from './pages/admin/classes/ClassesPage'
 import PeriodDetailAddPage from './pages/PeriodDetailAddPage'
+import PeriodDetailEditPage from './pages/PeriodDetailEditPage'
 
 function PrivateRoute({ children, roles }: { children: ReactNode; roles?: string[] }) {
   const { t } = useTranslation()
@@ -93,6 +94,7 @@ export default function App() {
         />
         <Route path="periods/:id" element={<PeriodDetailPage />} />
         <Route path="periods/:id/activity/new" element={<PeriodDetailAddPage />} />
+        <Route path="periods/:id/activity/:contentId/edit" element={<PeriodDetailEditPage />} />
         <Route path="notes" element={<NotesPage />} />
         <Route path="change-password" element={<ChangePasswordPage />} />
       </Route>

@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+
+import org.hibernate.annotations.CreationTimestamp;
 
 @Entity
 @Table(name = "period_contents")
@@ -30,6 +33,9 @@ public class PeriodContent {
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
 
     @Column(nullable = false)
     @Builder.Default

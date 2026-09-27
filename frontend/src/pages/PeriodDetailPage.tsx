@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { Button } from '../components/ui'
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal'
-import { ExternalLink, Trash2 } from 'lucide-react'
+import { ExternalLink, Pencil, Trash2 } from 'lucide-react'
 
 type MediaFile = {
   id: number
@@ -99,6 +99,19 @@ export default function PeriodDetailPage() {
       )
     }
   }
+
+  const startEdit = (content: PeriodContent) => {
+  if (!id) {
+    console.log('Period ID is missing')
+    return
+  }
+
+  const editUrl = `/periods/${id}/activity/${content.id}/edit`
+
+  console.log('EDIT URL:', editUrl)
+
+  navigate(editUrl)
+}
 
   const deleteActivity = async (
     contentId: number
@@ -229,30 +242,40 @@ export default function PeriodDetailPage() {
                   <h3 className="m-0 min-w-0 break-words">
                     Activity {index + 1}
                   </h3>
-
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    type="button"
-                    onClick={() =>
-                      setDeleteTarget({
-                        type: 'activity',
-                        id: content.id,
-                      })
-                    }
-                    title="Delete activity"
-                    aria-label="Delete activity"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
+                  <div className='flex gap-2'>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      type="button"
+                      onClick={() =>startEdit(content)}
+                      title="Edit activity"
+                      aria-label="Edit activity"
+                    >
+                      <Pencil size={16} />
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      type="button"
+                      onClick={() =>
+                        setDeleteTarget({
+                          type: 'activity',
+                          id: content.id,
+                        })
+                      }
+                      title="Delete activity"
+                      aria-label="Delete activity"
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="min-w-0 overflow-hidden">
-                  <h4 className="break-words">
+                  <h4 className="break-words mb-4">
                     {content.activityTitle ||
                       'No activity title'}
                   </h4>
-
                   {content.activityDescription && (
                     <p className="whitespace-pre-wrap break-words">
                       {content.activityDescription}
