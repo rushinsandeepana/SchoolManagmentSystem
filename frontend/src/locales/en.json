@@ -11,7 +11,12 @@
     "classes": "Classes",
     "notes": "Notes",
     "changePassword": "Change Password",
-    "mySchedule": "My Schedule"
+    "mySchedule": "My Schedule",
+    "main": "Main",
+    "academicManagement": "Academic Management",
+    "scheduleManagement": "Schedule Management",
+    "personal": "Personal",
+    "timetables": "Timetables"
   },
   "auth": {
     "login": "Login",
@@ -39,6 +44,8 @@
     "english": "English",
     "sinhala": "Sinhala",
     "save": "Save",
+    "create": "Create",
+    "update": "Update",
     "cancel": "Cancel",
     "delete": "Delete",
     "actions": "Actions",
@@ -236,5 +243,20 @@
       "subject": "Subject",
       "className": "Class"
     }
+  },
+  "timetable": {
+    "title": "Timetables",
+    "add": "Add Timetable",
+    "edit": "Edit Teacher Timetable",
+    "create": "Create Teacher Timetable",
+    "teacher": "Teacher",
+    "day": "Day",
+    "period": "Total Periods",
+    "periodType": "Period Type",
+    "subject": "Subjects",
+    "createdAt": "Created Date",
+    "status": "Status",
+    "actions": "Actions",
+    "noTimetable": "කාලසටහන් දත්ත නොමැත"
   }
 }

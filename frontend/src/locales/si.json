@@ -11,7 +11,12 @@
     "classes": "පන්ති",
     "notes": "සටහන්",
     "changePassword": "මුරපදය වෙනස් කරන්න",
-    "mySchedule": "මගේ කාලසටහන"
+    "mySchedule": "මගේ කාලසටහන",
+    "main": "ප්‍රධාන",
+    "academicManagement": "අධ්‍යයන කළමනාකරණය",
+    "scheduleManagement": "කාලසටහන් කළමනාකරණය",
+    "personal": "පුද්ගලික",
+    "timetables": "කාලසටහන්"
   },
   "auth": {
     "login": "පිවිසෙන්න",
@@ -39,6 +44,8 @@
     "english": "ඉංග්‍රීසි",
     "sinhala": "සිංහල",
     "save": "සුරකින්න",
+    "create": "සකසන්න",
+    "update": "සංස්කරණය",
     "cancel": "අවලංගු",
     "delete": "මකන්න",
     "actions": "ක්‍රියාමාර්ග",
@@ -236,5 +243,20 @@
       "subject": "විෂය",
       "className": "පන්තිය"
     }
+  },
+  "timetable": {
+    "title": "කාලසටහන්",
+    "add":"කාලසටහන එකතු කරන්න",
+    "edit":"කාලසටහන සංස්කරණය කරන්න",
+    "create": "කාලසටහනක සකසන්න",
+    "teacher": "ගුරුවරයා",
+    "day": "දිනය",
+    "period": "මුළු කාලපරිච්ඡේද",
+    "periodType": "වර්ගය",
+    "subject": "විෂයයන්",
+    "createdAt": "සාදන ලද දිනය",
+    "status": "තත්ත්වය",
+    "actions": "ක්‍රියාමාර්ග",
+    "noTimetable": ""
   }
 }
