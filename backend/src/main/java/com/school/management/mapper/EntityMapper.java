@@ -16,7 +16,6 @@ public final class EntityMapper {
                 .role(user.getRole())
                 .active(user.isActive())
                 .performanceScore(user.getPerformanceScore())
-                .subject(user.getSubject())
                 .createdAt(user.getCreatedAt())
                 .build();
     }

@@ -4,6 +4,7 @@ export type Teacher = {
   fullName: string
   email?: string
   subject?: string
+  subjectIds?: number[]
   performanceScore?: number
   active: boolean
 }

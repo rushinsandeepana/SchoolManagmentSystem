@@ -1,6 +1,5 @@
 package com.school.management.repository;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -10,10 +9,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.school.management.model.entity.Timetable;
 
 public interface TimetableRepository extends JpaRepository<Timetable, Long> {
-
-    // =========================
-    // BASIC FILTERS
-    // =========================
 
     List<Timetable> findByTeacherId(Long teacherId);
 
@@ -40,10 +35,6 @@ public interface TimetableRepository extends JpaRepository<Timetable, Long> {
             Long subjectId
     );
 
-    // =========================
-    // COMBINATION FILTERS
-    // =========================
-
     List<Timetable> findByTeacherIdAndSchoolClassId(
             Long teacherId,
             Long classId
@@ -66,10 +57,6 @@ public interface TimetableRepository extends JpaRepository<Timetable, Long> {
             LocalDateTime createdAt
     );
 
-    // =========================
-    // TEACHER CONFLICT
-    // =========================
-
     boolean existsByTeacherIdAndDayAndPeriod(
             Long teacherId,
             String day,
@@ -82,10 +69,6 @@ public interface TimetableRepository extends JpaRepository<Timetable, Long> {
             Integer period,
             Long id
     );
-
-    // =========================
-    // CLASS CONFLICT
-    // =========================
 
     boolean existsBySchoolClassIdAndDayAndPeriod(
             Long classId,

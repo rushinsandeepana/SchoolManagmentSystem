@@ -1,0 +1,11 @@
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
+    username VARCHAR(80) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    full_name VARCHAR(120) NOT NULL,
+    email VARCHAR(120),
+    role VARCHAR(20) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    performance_score DOUBLE PRECISION DEFAULT 0.0,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+);

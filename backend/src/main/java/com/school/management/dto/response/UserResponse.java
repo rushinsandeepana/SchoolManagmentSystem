@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @Builder
@@ -16,6 +17,6 @@ public class UserResponse {
     private Role role;
     private boolean active;
     private Double performanceScore;
-    private String subject;
+    private List<Long> subjectIds;
     private Instant createdAt;
 }

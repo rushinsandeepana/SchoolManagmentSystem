@@ -9,14 +9,19 @@ import com.school.management.exception.BadRequestException;
 import com.school.management.exception.ResourceNotFoundException;
 import com.school.management.mapper.EntityMapper;
 import com.school.management.model.entity.PeriodContent;
+import com.school.management.model.entity.Subject;
+import com.school.management.model.entity.TeacherSubject;
 import com.school.management.model.entity.User;
 import com.school.management.model.enums.Role;
 import com.school.management.repository.MediaFileRepository;
 import com.school.management.repository.PeriodContentRepository;
 import com.school.management.repository.PeriodSlotRepository;
+import com.school.management.repository.SubjectRepository;
 import com.school.management.repository.TeacherNoteRepository;
+import com.school.management.repository.TeacherSubjectRepository;
 import com.school.management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
@@ -28,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j 
 @Service
 @RequiredArgsConstructor
 public class TeacherService {
@@ -39,6 +45,8 @@ public class TeacherService {
     private final TeacherNoteRepository teacherNoteRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final TeacherSubjectRepository teacherSubjectRepository;
+    private final SubjectRepository subjectRepository;
     @Value ("${app.frontend-url}")
     private String frontendUrl;
 
@@ -52,12 +60,31 @@ public class TeacherService {
         int safePage = Math.max(page, 0);
         int safeSize = size <= 0 ? 10 : Math.min(size, 100);
         String query = search == null ? "" : search.trim();
+
         return PageResponse.from(
                 userRepository.searchByRole(
                         Role.TEACHER,
                         query,
-                        PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "id"))),
-                EntityMapper::toUserResponse);
+                        PageRequest.of(
+                                safePage,
+                                safeSize,
+                                Sort.by(Sort.Direction.DESC, "id")
+                        )
+                ),
+                teacher -> {
+                    UserResponse response = EntityMapper.toUserResponse(teacher);
+
+                    List<Long> subjectIds = teacherSubjectRepository
+                            .findByTeacherId(teacher.getId())
+                            .stream()
+                            .map(teacherSubject -> teacherSubject.getSubject().getId())
+                            .toList();
+
+                    response.setSubjectIds(subjectIds);
+
+                    return response;
+                }
+        );
     }
 
     public List<UserResponse> getAllSubjects() {
@@ -88,12 +115,29 @@ public class TeacherService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .fullName(request.getFullName())
                 .email(request.getEmail())
-                .subject(request.getSubject())
                 .performanceScore(request.getPerformanceScore() != null ? request.getPerformanceScore() : 0.0)
                 .role(Role.TEACHER)
                 .active(true)
                 .build();
         User savedTeacher = userRepository.save(teacher);
+
+        if (request.getSubjectIds() != null) {
+            for (Long subjectId : request.getSubjectIds()) {
+                Subject subject = subjectRepository.findById(subjectId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Subject not found: " + subjectId
+                                )
+                        );
+
+                TeacherSubject teacherSubject = TeacherSubject.builder()
+                        .teacher(savedTeacher)
+                        .subject(subject)
+                        .build();
+
+                teacherSubjectRepository.save(teacherSubject);
+            }
+        }
 
         emailService.sendTeacherWelcomeEmail(
             savedTeacher.getEmail(),
@@ -111,11 +155,27 @@ public class TeacherService {
         User teacher = requireTeacher(id);
         if (request.getFullName() != null) teacher.setFullName(request.getFullName());
         if (request.getEmail() != null) teacher.setEmail(request.getEmail());
-        if (request.getSubject() != null) teacher.setSubject(request.getSubject());
         if (request.getPerformanceScore() != null) teacher.setPerformanceScore(request.getPerformanceScore());
         if (request.getActive() != null) teacher.setActive(request.getActive());
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             teacher.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        if (request.getSubjectIds() != null) {
+            teacherSubjectRepository.deleteByTeacherId(id);
+            for (Long subjectId : request.getSubjectIds()) {
+                Subject subject = subjectRepository.findById(subjectId)
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Subject not found: " + subjectId
+                                )
+                        );
+                TeacherSubject teacherSubject = TeacherSubject.builder()
+                        .teacher(teacher)
+                        .subject(subject)
+                        .build();
+
+                teacherSubjectRepository.save(teacherSubject);
+            }
         }
         return EntityMapper.toUserResponse(userRepository.save(teacher));
     }
@@ -136,6 +196,7 @@ public class TeacherService {
         });
         periodSlotRepository.deleteByTeacherId(id);
         teacherNoteRepository.deleteByTeacherId(id);
+        teacherSubjectRepository.deleteByTeacherId(id);
         userRepository.delete(teacher);
     }
 

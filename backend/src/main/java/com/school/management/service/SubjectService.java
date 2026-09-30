@@ -59,7 +59,7 @@ public class SubjectService {
 
     public List<SubjectResponse> getAllSubjects() {
         return subjectRepository.findAll(
-            Sort.by(Sort.Direction.ASC, "subjectName")
+            Sort.by(Sort.Direction.DESC, "id")
         ).stream()
          .map(EntityMapper::toSubjectResponse)
          .collect(Collectors.toList());

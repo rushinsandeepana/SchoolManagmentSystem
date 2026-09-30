@@ -22,7 +22,7 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
                OR LOWER(s.subjectName) LIKE LOWER(CONCAT('%', :search, '%'))
                OR LOWER(s.subjectCode) LIKE LOWER(CONCAT('%', :search, '%'))
                OR LOWER(CAST(s.subjectType AS string)) LIKE LOWER(CONCAT('%', :search, '%'))
-            ORDER BY s.subjectName ASC
+            ORDER BY s.id DESC
             """)
     Page<Subject> search(@Param("search") String search, Pageable pageable);
 }

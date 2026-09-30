@@ -43,9 +43,6 @@ public class User {
     @Builder.Default
     private Double performanceScore = 0.0;
 
-    @Column(length = 100)
-    private String subject;
-
     @Column(nullable = false, updatable = false)
     @Builder.Default
     private Instant createdAt = Instant.now();

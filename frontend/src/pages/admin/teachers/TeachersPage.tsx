@@ -35,7 +35,7 @@ export default function TeachersPage() {
     []
   )
 
-  const list = useServerList<Teacher>(fetcher)
+  const list = useServerList<Teacher>(fetcher)  
 
   useEffect(() => {
     subjectApi.list({ page: 0, size: 100 }).then((res) => {
@@ -77,12 +77,18 @@ export default function TeachersPage() {
       password: '',
       fullName: teacher.fullName || '',
       email: teacher.email || '',
-      subject: teacher.subject ? teacher.subject.split(',').map((subject) => subject.trim()).filter(Boolean) : [],
+      subject: teacher.subjectIds?.map(String) || [],
       active: teacher.active,
     })
     setErrors({})
     setShowForm(true)
   }
+
+  const subjectMap = useMemo(() => {
+    return new Map(
+      subjects.map((subject) => [subject.id, subject.subjectName])
+    )
+  }, [subjects])
 
   const onSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
@@ -109,16 +115,21 @@ export default function TeachersPage() {
         await teacherApi.update(editingId, {
           fullName: form.fullName,
           email: form.email,
-          subject: form.subject.join(', '),
+          subjectIds: form.subject.map(Number),
           active: form.active,
           password: form.password || undefined,
         })
         showToast(t('common.updated'), 'success')
       } else {
-        await teacherApi.create({
-          ...form,
-          subject: form.subject.join(', '),
-        })
+        const createData = {
+          username: form.username,
+          password: form.password,
+          fullName: form.fullName,
+          email: form.email,
+          subjectIds: form.subject.map(Number),
+          active: form.active,
+        }
+        await teacherApi.create(createData)
         showToast(t('common.created'), 'success')
       }
 
@@ -146,7 +157,36 @@ export default function TeachersPage() {
     () => [
       { key: 'fullName', label: t('teacher.fullName') },
       { key: 'username', label: t('auth.username') },
-      { key: 'subject', label: t('teacher.subject') },
+      {
+        key: 'subject',
+        label: t('teacher.subject'),
+        render: (teacher: Teacher) => {
+          const subjectNames =
+            teacher.subjectIds
+              ?.map((subjectId) => subjectMap.get(subjectId))
+              .filter(Boolean) || []
+
+          if (subjectNames.length === 0) {
+            return '-'
+          }
+
+          const rows = []
+
+          for (let i = 0; i < subjectNames.length; i += 2) {
+            rows.push(subjectNames.slice(i, i + 2))
+          }
+
+          return (
+            <div className="flex flex-col gap-1">
+              {rows.map((row, index) => (
+                <div key={index}>
+                  {row.join(', ')}
+                </div>
+              ))}
+            </div>
+          )
+        },
+      },
       {
         key: 'active',
         label: t('common.active'),
@@ -158,7 +198,7 @@ export default function TeachersPage() {
         render: (teacher: Teacher) => (
           <div className="ui-action-group">
             <Button type="button" variant="secondary" size="sm" onClick={() => startEdit(teacher)}>
-              {t('common.manage')}
+              {t('common.edit')}
             </Button>
             <Button type="button" variant="danger" size="sm" onClick={() => setDeleteId(teacher.id)}>
               {t('common.delete')}
@@ -167,7 +207,7 @@ export default function TeachersPage() {
         ),
       },
     ],
-    [t]
+    [t, subjectMap]
   )
 
   return (
@@ -187,7 +227,7 @@ export default function TeachersPage() {
         subjectOptions={subjects
           .slice()
           .sort((first, second) => first.subjectName.localeCompare(second.subjectName))
-          .map((subject) => ({ value: subject.subjectName, label: subject.subjectName }))}
+          .map((subject) => ({ value: String(subject.id), label: subject.subjectName }))}
         onChange={onChange}
         onSubmit={onSubmit}
         onClose={() => setShowForm(false)}

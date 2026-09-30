@@ -264,15 +264,15 @@ export function MultiSelectField({
         </span>
       )}
 
-      <div className="ui-multiselect-dropdown">
+      <div className="ui-multiselect-dropdown w-full min-w-0">
         <button
           type="button"
-          className="ui-select ui-multiselect-trigger"
+          className="ui-select ui-multiselect-trigger w-full min-w-0 max-w-full overflow-hidden"
           onClick={() => setIsOpen((prev) => !prev)}
           aria-expanded={isOpen}
           aria-haspopup="listbox"
         >
-          <span className="truncate flex-1 text-left">
+          <span className="block min-w-0 flex-1 truncate overflow-hidden whitespace-nowrap text-left">
             {selectedOptions.length === 0 ? (
               <span className="text-muted">{selectPlaceholder}</span>
             ) : (

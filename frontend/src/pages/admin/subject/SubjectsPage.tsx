@@ -16,13 +16,21 @@ const emptyForm: SubjectForm = {
   active: true,
 }
 
-const randomCodeDigits = () => Math.floor(1000 + Math.random() * 9000).toString()
 
 const subjectCodePrefix = (subjectName: string) => {
-  const letters = subjectName.replace(/[^a-zA-Z]/g, '').toUpperCase()
-  if (!letters) return ''
-  return `${letters.slice(0, 2)}${letters.slice(-1)}`
-}
+  const words = subjectName.trim().split(/\s+/).filter(Boolean)
+
+    if (words.length >= 2) {
+      return words
+        .map((word) => word.replace(/[^a-zA-Z]/g, ''))
+        .filter(Boolean)
+        .map((word) => word.charAt(0).toUpperCase())
+        .join('')
+    }
+    const letters = subjectName.replace(/[^a-zA-Z]/g, '').toUpperCase()
+    if (!letters) return ''
+    return `${letters.slice(0, 2)}${letters.slice(-1)}`
+  }
 
 export default function SubjectsPage() {
   const { t } = useTranslation()
@@ -54,11 +62,10 @@ export default function SubjectsPage() {
     setForm((previous) => {
       if (name === 'subjectName') {
         const prefix = subjectCodePrefix(value)
-        const existingDigits = previous.subjectCode.match(/\d{4}$/)?.[0] || randomCodeDigits()
         return {
           ...previous,
           subjectName: value,
-          subjectCode: prefix ? `${prefix}${existingDigits}` : '',
+          subjectCode: prefix ? `${prefix}` : '',
         }
       }
 
