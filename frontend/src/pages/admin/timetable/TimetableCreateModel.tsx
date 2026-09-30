@@ -1,5 +1,5 @@
 import type { ChangeEvent, FormEvent } from 'react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import Modal from '../../../components/Modal'
 import { Button, SelectField } from '../../../components/ui'
@@ -40,13 +40,13 @@ type TimetableErrors = {
 type Props = {
   open: boolean
   mode?: 'create' | 'edit'
-  initialData?: TeacherTimetable[]
   teachers: Teacher[]
   subjects: Subject[]
   classes: SchoolClass[]
   onClose: () => void
   onSuccess: () => void
   onError?: (message: string) => void
+  timetable?: TeacherTimetable[] | null
 }
 
 const DAYS: WeeklyDay[] = [
@@ -83,53 +83,32 @@ const createSubjectSection = (): SubjectSection => ({
 export default function TimetableCreateModal({
   open,
   mode = 'create',
-  initialData = [],
   teachers,
   subjects,
   classes,
   onClose,
   onSuccess,
   onError,
+  timetable,
 }: Props) {
   const { t } = useTranslation()
 
   const [teacherId, setTeacherId] = useState('')
-  const [subjectSections, setSubjectSections] = useState<
-    SubjectSection[]
-  >([])
-
-  const [errors, setErrors] =
-    useState<TimetableErrors>({})
-
+  const [subjectSections, setSubjectSections] = useState<SubjectSection[]>([])
+  const [errors, setErrors] = useState<TimetableErrors>({})
   const [saving, setSaving] = useState(false)
+  const [serverError, setServerError] = useState('')
 
-  /*
-   * Prevent the initialization effect from
-   * running repeatedly while the modal is open.
-   */
-  const wasOpen = useRef(false)
-
-  /*
-   * Initialize form when modal changes
-   * from closed -> open.
-   */
   useEffect(() => {
     if (!open) {
-      wasOpen.current = false
       return
     }
-
-    if (wasOpen.current) {
-      return
-    }
-
-    wasOpen.current = true
-
-    /*
-     * EDIT
-     */
-    if (mode === 'edit' && initialData.length > 0) {
-      const first = initialData[0]
+    if (
+      mode === 'edit' &&
+      timetable &&
+      timetable.length > 0
+    ) {
+      const first = timetable[0]
 
       setTeacherId(String(first.teacherId))
 
@@ -138,7 +117,7 @@ export default function TimetableCreateModal({
         SubjectSection
       >()
 
-      initialData.forEach((item) => {
+      timetable.forEach((item) => {
         const subjectId = item.subjectId
 
         if (!grouped.has(subjectId)) {
@@ -153,8 +132,8 @@ export default function TimetableCreateModal({
           id: Date.now() + Math.random(),
           databaseId: item.id,
           classId: String(item.classId),
-          dayOfWeek: item.dayOfWeek,
-          periodNumber: String(item.periodNumber),
+          dayOfWeek: item.day,
+          periodNumber: String(item.period),
         })
       })
 
@@ -163,24 +142,24 @@ export default function TimetableCreateModal({
       )
 
       setErrors({})
+      setServerError('')
 
       return
     }
 
-    /*
-     * CREATE
-     */
     if (mode === 'create') {
       setTeacherId('')
       setSubjectSections([])
       setErrors({})
+      setServerError('')
     }
-  }, [open, mode])
+  }, [open, mode, timetable])
 
   const resetForm = () => {
     setTeacherId('')
     setSubjectSections([])
     setErrors({})
+    setServerError('')
     setSaving(false)
   }
 
@@ -193,9 +172,6 @@ export default function TimetableCreateModal({
     onClose()
   }
 
-  /*
-   * Teacher change
-   */
   const handleTeacherChange = (
     event: ChangeEvent<
       HTMLInputElement | HTMLSelectElement
@@ -213,10 +189,6 @@ export default function TimetableCreateModal({
       return next
     })
 
-    /*
-     * Automatically create the first
-     * subject section for CREATE mode.
-     */
     if (mode === 'create') {
       if (value) {
         setSubjectSections([
@@ -228,9 +200,6 @@ export default function TimetableCreateModal({
     }
   }
 
-  /*
-   * Subject change
-   */
   const updateSubject = (
     sectionId: number,
     event: ChangeEvent<
@@ -260,9 +229,6 @@ export default function TimetableCreateModal({
     })
   }
 
-  /*
-   * Add subject section
-   */
   const addSubject = () => {
     setSubjectSections((previous) => [
       ...previous,
@@ -270,9 +236,6 @@ export default function TimetableCreateModal({
     ])
   }
 
-  /*
-   * Remove subject section
-   */
   const removeSubject = (
     sectionId: number,
   ) => {
@@ -292,9 +255,6 @@ export default function TimetableCreateModal({
     })
   }
 
-  /*
-   * Add period row
-   */
   const addPeriod = (
     sectionId: number,
   ) => {
@@ -321,9 +281,6 @@ export default function TimetableCreateModal({
     })
   }
 
-  /*
-   * Remove period row
-   */
   const removePeriod = (
     sectionId: number,
     periodId: number,
@@ -353,9 +310,6 @@ export default function TimetableCreateModal({
     })
   }
 
-  /*
-   * Update period row
-   */
   const updatePeriod = (
     sectionId: number,
     periodId: number,
@@ -399,37 +353,23 @@ export default function TimetableCreateModal({
     })
   }
 
-  /*
-   * Validate all fields.
-   */
   const validateForm = () => {
     const validationErrors: TimetableErrors =
       {}
 
-    /*
-     * Teacher
-     */
     if (!teacherId) {
       validationErrors.teacherId = t(
         'validation.teacherRequired',
       )
     }
 
-    /*
-     * At least one subject
-     */
     if (subjectSections.length === 0) {
       setErrors(validationErrors)
       return false
     }
 
-    /*
-     * Validate every subject section.
-     */
     subjectSections.forEach((section) => {
-      /*
-       * Subject
-       */
+      
       if (!section.subjectId) {
         validationErrors[
           `subject-${section.id}`
@@ -438,9 +378,6 @@ export default function TimetableCreateModal({
         )
       }
 
-      /*
-       * At least one period.
-       */
       if (section.periods.length === 0) {
         validationErrors[
           `periods-${section.id}`
@@ -448,13 +385,8 @@ export default function TimetableCreateModal({
           'Please add at least one period.'
       }
 
-      /*
-       * Validate every period row.
-       */
       section.periods.forEach((period) => {
-        /*
-         * Class
-         */
+       
         if (!period.classId) {
           validationErrors[
             `class-${period.id}`
@@ -463,9 +395,6 @@ export default function TimetableCreateModal({
           )
         }
 
-        /*
-         * Day
-         */
         if (!period.dayOfWeek) {
           validationErrors[
             `day-${period.id}`
@@ -474,9 +403,6 @@ export default function TimetableCreateModal({
           )
         }
 
-        /*
-         * Period
-         */
         if (!period.periodNumber) {
           validationErrors[
             `period-${period.id}`
@@ -496,9 +422,6 @@ export default function TimetableCreateModal({
     )
   }
 
-  /*
-   * Build API request.
-   */
   const buildRequest = (
     section: SubjectSection,
     period: PeriodRow,
@@ -506,20 +429,19 @@ export default function TimetableCreateModal({
     teacherId: Number(teacherId),
     subjectId: Number(section.subjectId),
     classId: Number(period.classId),
-    dayOfWeek:
+    day:
       period.dayOfWeek as WeeklyDay,
-    periodNumber: Number(
+    period: Number(
       period.periodNumber,
     ),
   })
 
-  /*
-   * Submit.
-   */
   const handleSubmit = async (
     event: FormEvent<HTMLFormElement>,
   ) => {
     event.preventDefault()
+
+    setServerError('')
 
     if (!validateForm()) {
       return
@@ -528,9 +450,6 @@ export default function TimetableCreateModal({
     try {
       setSaving(true)
 
-      /*
-       * CREATE
-       */
       if (mode === 'create') {
         for (const section of subjectSections) {
           for (const period of section.periods) {
@@ -546,9 +465,6 @@ export default function TimetableCreateModal({
         }
       }
 
-      /*
-       * EDIT
-       */
       if (mode === 'edit') {
         for (const section of subjectSections) {
           for (const period of section.periods) {
@@ -574,18 +490,10 @@ export default function TimetableCreateModal({
       resetForm()
       onSuccess()
     } catch (err: any) {
-      /*
-       * Technical details remain in console.
-       */
-      console.error(
-        'Failed to save teacher timetable:',
-        err,
-      )
 
-      /*
-       * User sees a friendly message
-       * through the parent Toast.
-       */
+      const message = err?.response?.data?.message || 'Failed to save timetable.'
+
+      setServerError(message)
       onError?.(
         t(
           'common.saveFailed',
@@ -597,9 +505,6 @@ export default function TimetableCreateModal({
     }
   }
 
-  /*
-   * Select options.
-   */
   const teacherOptions = teachers.map(
     (teacher) => ({
       value: String(teacher.id),
@@ -626,10 +531,6 @@ export default function TimetableCreateModal({
     }),
   )
 
-  /*
-   * WeeklyDay from types/period.ts
-   * is used here.
-   */
   const dayOptions = DAYS.map((day) => ({
     value: day,
     label: DAY_LABELS[day],
@@ -664,9 +565,6 @@ export default function TimetableCreateModal({
         onSubmit={handleSubmit}
         noValidate
       >
-        {/* =========================
-            Teacher
-        ========================== */}
 
         <div className="form-row cols-2">
           <SelectField
@@ -686,17 +584,12 @@ export default function TimetableCreateModal({
           />
         </div>
 
-        {/* =========================
-            Subject Sections
-        ========================== */}
-
         {subjectSections.map(
           (section, index) => (
             <div
               key={section.id}
               className="border-b pb-5 mb-5 last:border-b-0"
             >
-              {/* Subject */}
 
               <div className="form-row">
                 <div className="flex items-start gap-2">
@@ -732,8 +625,6 @@ export default function TimetableCreateModal({
                     />
                   </div>
 
-                  {/* Add first period */}
-
                   <div className="mt-[1.7rem] shrink-0">
                     <Button
                       type="button"
@@ -753,8 +644,6 @@ export default function TimetableCreateModal({
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
-
-                  {/* Remove subject */}
 
                   <div className="mt-[1.7rem] shrink-0">
                     <Button
@@ -779,15 +668,9 @@ export default function TimetableCreateModal({
                 </div>
               </div>
 
-              {/* =========================
-                  Class / Day / Period
-              ========================== */}
-
               {section.periods.length >
                 0 && (
                 <div className="mt-3 space-y-3">
-                  {/* Headers */}
-
                   <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3">
                     <div className="text-sm font-medium">
                       Class
@@ -804,137 +687,99 @@ export default function TimetableCreateModal({
                     <div />
                   </div>
 
-                  {/* Period rows */}
-
-                  {section.periods.map(
-                    (period) => (
-                      <div
-                        key={period.id}
-                        className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-start"
-                      >
-                        {/* Class */}
-
-                        <SelectField
-                          placeholder={t(
-                            'common.selectOption',
-                          )}
-                          value={
-                            period.classId
-                          }
-                          onChange={(
+                  {section.periods.map((period) => (
+                    <div
+                      key={period.id}
+                      className="grid grid-cols-[1fr_1fr_1fr_auto] gap-3 items-center"
+                    >
+                      <SelectField
+                        placeholder={t(
+                          'common.selectOption',
+                        )}
+                        value={period.classId}
+                        onChange={(event) =>
+                          updatePeriod(
+                            section.id,
+                            period.id,
+                            'classId',
                             event,
-                          ) =>
-                            updatePeriod(
+                          )
+                        }
+                        required
+                        title={t(
+                          'validation.classRequired',
+                        )}
+                        error={
+                          errors[`class-${period.id}`]
+                        }
+                        options={classOptions}
+                      />
+
+                      <SelectField
+                        placeholder={t(
+                          'common.selectOption',
+                        )}
+                        value={period.dayOfWeek}
+                        onChange={(event) =>
+                          updatePeriod(
+                            section.id,
+                            period.id,
+                            'dayOfWeek',
+                            event,
+                          )
+                        }
+                        required
+                        title={t(
+                          'validation.dayRequired',
+                        )}
+                        error={
+                          errors[`day-${period.id}`]
+                        }
+                        options={dayOptions}
+                      />
+
+                      <SelectField
+                        placeholder={t(
+                          'common.selectOption',
+                        )}
+                        value={period.periodNumber}
+                        onChange={(event) =>
+                          updatePeriod(
+                            section.id,
+                            period.id,
+                            'periodNumber',
+                            event,
+                          )
+                        }
+                        required
+                        title={t(
+                          'validation.periodRequired',
+                        )}
+                        error={
+                          errors[`period-${period.id}`]
+                        }
+                        options={periodOptions}
+                      />
+
+                      <div className="flex items-center">
+                        <Button
+                          type="button"
+                          variant="danger"
+                          size="sm"
+                          onClick={() =>
+                            removePeriod(
                               section.id,
                               period.id,
-                              'classId',
-                              event,
                             )
                           }
-                          required
-                          title={t(
-                            'validation.classRequired',
-                          )}
-                          error={
-                            errors[
-                              `class-${period.id}`
-                            ]
-                          }
-                          options={
-                            classOptions
-                          }
-                        />
-
-                        {/* Day */}
-
-                        <SelectField
-                          placeholder={t(
-                            'common.selectOption',
-                          )}
-                          value={
-                            period.dayOfWeek
-                          }
-                          onChange={(
-                            event,
-                          ) =>
-                            updatePeriod(
-                              section.id,
-                              period.id,
-                              'dayOfWeek',
-                              event,
-                            )
-                          }
-                          required
-                          title={t(
-                            'validation.dayRequired',
-                          )}
-                          error={
-                            errors[
-                              `day-${period.id}`
-                            ]
-                          }
-                          options={
-                            dayOptions
-                          }
-                        />
-
-                        {/* Period */}
-
-                        <SelectField
-                          placeholder={t(
-                            'common.selectOption',
-                          )}
-                          value={
-                            period.periodNumber
-                          }
-                          onChange={(
-                            event,
-                          ) =>
-                            updatePeriod(
-                              section.id,
-                              period.id,
-                              'periodNumber',
-                              event,
-                            )
-                          }
-                          required
-                          title={t(
-                            'validation.periodRequired',
-                          )}
-                          error={
-                            errors[
-                              `period-${period.id}`
-                            ]
-                          }
-                          options={
-                            periodOptions
-                          }
-                        />
-
-                        {/* Remove period */}
-
-                        <div className="pt-[1.7rem]">
-                          <Button
-                            type="button"
-                            variant="danger"
-                            size="sm"
-                            onClick={() =>
-                              removePeriod(
-                                section.id,
-                                period.id,
-                              )
-                            }
-                            aria-label="Remove period"
-                            title="Remove period"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                          aria-label="Remove period"
+                          title="Remove period"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
-                    ),
-                  )}
-
-                  {/* Add Period */}
+                    </div>
+                  ))}
 
                   <div className="flex justify-end">
                     <Button
@@ -953,8 +798,6 @@ export default function TimetableCreateModal({
                 </div>
               )}
 
-              {/* No period error */}
-
               {errors[
                 `periods-${section.id}`
               ] && (
@@ -970,10 +813,6 @@ export default function TimetableCreateModal({
           ),
         )}
 
-        {/* =========================
-            Add Subject
-        ========================== */}
-
         {teacherId && (
           <div className="flex justify-end mb-4">
             <Button
@@ -986,9 +825,17 @@ export default function TimetableCreateModal({
           </div>
         )}
 
-        {/* =========================
-            Cancel / Save
-        ========================== */}
+        {serverError && (
+          <div className="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3">
+            <p className="font-semibold text-red-700">
+              ⚠ Timetable conflict
+            </p>
+
+            <p className="mt-1 text-sm text-red-600">
+              {serverError}
+            </p>
+          </div>
+        )}
 
         <div className="form-actions">
           <Button

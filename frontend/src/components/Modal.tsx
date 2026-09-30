@@ -7,6 +7,7 @@ type ModalProps = {
   onClose: () => void
   children: React.ReactNode
   closeOnOutsideClick?: boolean
+  size?: 'sm' | 'md' | 'lg' | 'xl'
 }
 
 export default function Modal({
@@ -15,6 +16,7 @@ export default function Modal({
   onClose,
   children,
   closeOnOutsideClick = false,
+  size = 'md',
 }: ModalProps) {
   const { t } = useTranslation()
 
@@ -38,6 +40,13 @@ export default function Modal({
 
   if (!open) return null
 
+  const sizeClass = {
+    sm: 'modal-sm',
+    md: 'modal-md',
+    lg: 'modal-lg',
+    xl: 'modal-xl',
+  }[size]
+
   return (
     <div
       className="modal-backdrop"
@@ -47,7 +56,7 @@ export default function Modal({
       }
     >
       <section
-        className="modal"
+        className={`modal ${sizeClass}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"

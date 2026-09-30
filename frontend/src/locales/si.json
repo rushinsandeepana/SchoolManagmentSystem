@@ -73,7 +73,10 @@
     "select": "තෝරන්න",
     "selectAll": "සියල්ල තෝරන්න",
     "deselectAll": "සියල්ල අතුරුදන් කරන්න",
-    "activity": "ක්‍රියාකාරකම"
+    "activity": "ක්‍රියාකාරකම",
+    "saving": "සුරකිනවා...",
+    "edit": "සංස්කරණය",
+    "view": "දැකීම"
   },
   "validation": {
     "teacherRequired": "ගුරුවරයා අවශ්‍යයි",
@@ -257,6 +260,10 @@
     "createdAt": "සාදන ලද දිනය",
     "status": "තත්ත්වය",
     "actions": "ක්‍රියාමාර්ග",
-    "noTimetable": ""
+    "view": "දැකීම",
+    "noTimetable": "කාලසටහන් දත්ත නොමැත",
+    "totalPeriods": "කාලපරිච්ඡේද ගණන",
+    "periodHeader": "කාලපරිච්ඡේද"
+
   }
 }

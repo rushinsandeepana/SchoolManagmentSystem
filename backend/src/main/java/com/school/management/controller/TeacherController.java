@@ -1,6 +1,5 @@
 package com.school.management.controller;
 
-import com.school.management.dto.request.PeriodContentRequest;
 import com.school.management.dto.request.TeacherNoteRequest;
 import com.school.management.dto.response.ApiMessage;
 import com.school.management.dto.response.PageResponse;

@@ -580,7 +580,7 @@
   }
 
   .modal {
-    @apply w-full max-w-[min(620px,100%)] max-h-[min(720px,calc(100vh-2rem))] overflow-hidden rounded-card border border-border bg-surface;
+    @apply w-full max-h-[min(720px,calc(100vh-2rem))] overflow-hidden rounded-card border border-border bg-surface;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
     animation: rise 0.2s ease;
   }
@@ -606,6 +606,22 @@
     min-width: 0;
     scrollbar-width: none;
     max-height: calc(min(720px, 100vh - 2rem) - 4.5rem);
+  }
+
+  .modal-sm {
+    width: min(90vw, 400px);
+  }
+
+  .modal-md {
+    width: min(90vw, 620px);
+  }
+
+  .modal-lg {
+    width: min(92vw, 900px);
+  }
+
+  .modal-xl {
+    width: min(95vw, 1200px);
   }
 
   .perf-bar {

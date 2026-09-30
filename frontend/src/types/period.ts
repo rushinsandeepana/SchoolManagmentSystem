@@ -35,25 +35,26 @@ export type TeacherTimetable = {
   id: number
   teacherId: number
   teacherName: string
-  dayOfWeek: WeeklyDay
-  periodNumber: number
+  day: WeeklyDay
+  period: number
   subjectId: number
   subjectName: string
   classId: number
-  className: string
+  className: string,
+  createdAt?: string
 }
 
 export type CreateTeacherTimetableSlotRequest = {
   teacherId: number
-  dayOfWeek: WeeklyDay
-  periodNumber: number
+  day: WeeklyDay
+  period: number
   subjectId: number
   classId: number
 }
 
 export type UpdateTeacherTimetableSlotRequest = {
-  dayOfWeek: WeeklyDay
-  periodNumber: number
+  day: WeeklyDay
+  period: number
   subjectId: number
   classId: number
 }

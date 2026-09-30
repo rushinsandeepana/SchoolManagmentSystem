@@ -14,6 +14,17 @@ import type { TeacherTimetable } from '../../../types/period'
 import type { Subject } from '../../../types/subject'
 import type { SchoolClass } from '../../../types/class'
 import type { Teacher } from '../../../types/teacher'
+import type { PageResponse } from '../../../types/paging'
+import TimetableViewModal from './TimetableViewModal'
+
+type TeacherTimetableGroup = {
+  teacherId: number
+  teacherName: string
+  periodCount: number
+  subjects: string[]
+  createdAt: string
+  records: TeacherTimetable[]
+}
 
 export default function TimetablesPage() {
   const { t } = useTranslation()
@@ -26,18 +37,36 @@ export default function TimetablesPage() {
 
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [classes, setClasses] = useState<SchoolClass[]>([])
-
   const [showForm, setShowForm] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [editingTimetable, setEditingTimetable] = useState<TeacherTimetable[] | null>(null)
+  const [showViewModal, setShowViewModal] = useState(false)
+  const [viewingTimetable, setViewingTimetable] = useState<TeacherTimetable[] | null>(null)
 
   const fetcher = useCallback(
-    (query: {
-      page?: number
-      size?: number
-      search?: string
-    }) => teacherTimetableApi.list(query),
-    [],
-  )
+  async (query: {
+    page?: number
+    size?: number
+    search?: string
+  }): Promise<{ data: PageResponse<TeacherTimetable> }> => {
+    const response = await teacherTimetableApi.list(query)
+
+    const data = Array.isArray(response.data)
+      ? response.data
+      : []
+
+    return {
+      data: {
+        content: data,
+        page: 0,
+        totalElements: data.length,
+        totalPages: 1,
+        size: data.length || 1,
+      },
+    }
+  },
+  [],
+)
 
   const list = useServerList<TeacherTimetable>(fetcher)
 
@@ -52,18 +81,14 @@ export default function TimetablesPage() {
       try {
         const response = await periodApi.getTeachers()
 
-        const activeTeachers = (response.data || [])
-          .filter((teacher: Teacher) => teacher.active)
-          .map((teacher: Teacher) => ({
+        const teachers = (response.data || []).map(
+          (teacher: Teacher) => ({
             id: Number(teacher.id),
-            fullName:
-              teacher.fullName ||
-              [teacher.firstName, teacher.lastName]
-                .filter(Boolean)
-                .join(' '),
-          }))
+            fullName: teacher.fullName,
+          }),
+        )
 
-        setTeachers(activeTeachers)
+        setTeachers(teachers)
       } catch (error) {
         console.error(error)
         showToast(t('common.error'), 'error')
@@ -112,15 +137,18 @@ export default function TimetablesPage() {
   }, [showToast, t])
 
   const startCreate = () => {
+    setEditingTimetable(null)
     setShowForm(true)
   }
 
-  const startEdit = (timetable: TeacherTimetable) => {
-    navigate(`/admin/teacher-timetable/${timetable.id}/edit`)
+  const startEdit = ( timetable: TeacherTimetableGroup) => {
+    setEditingTimetable(timetable.records)
+    setShowForm(true)
   }
 
-  const startView = (timetable: TeacherTimetable) => {
-    navigate(`/admin/teacher-timetable/${timetable.id}`)
+  const startView = ( timetable: TeacherTimetableGroup) => {
+    setViewingTimetable(timetable.records)
+    setShowViewModal(true)
   }
 
   const onDelete = async (id: number) => {
@@ -143,6 +171,65 @@ export default function TimetablesPage() {
     }
   }
 
+  const groupedTimetables = useMemo(() => {
+    const grouped = new Map<
+      number,
+      TeacherTimetableGroup
+    >()
+
+    list.content.forEach((timetable) => {
+      const timetableWithCreatedAt =
+        timetable as TeacherTimetable & {
+          createdAt?: string
+        }
+
+      const existing = grouped.get(timetable.teacherId)
+
+      if (existing) {
+        existing.periodCount += 1
+
+        if (
+          timetable.subjectName &&
+          !existing.subjects.includes(
+            timetable.subjectName,
+          )
+        ) {
+          existing.subjects.push(
+            timetable.subjectName,
+          )
+        }
+
+        existing.records.push(timetable)
+
+        if (
+          timetableWithCreatedAt.createdAt &&
+          (!existing.createdAt ||
+            new Date(
+              timetableWithCreatedAt.createdAt,
+            ).getTime() >
+              new Date(existing.createdAt).getTime())
+        ) {
+          existing.createdAt =
+            timetableWithCreatedAt.createdAt
+        }
+      } else {
+        grouped.set(timetable.teacherId, {
+          teacherId: timetable.teacherId,
+          teacherName: timetable.teacherName,
+          periodCount: 1,
+          subjects: timetable.subjectName
+            ? [timetable.subjectName]
+            : [],
+          createdAt:
+            timetableWithCreatedAt.createdAt || '',
+          records: [timetable],
+        })
+      }
+    })
+
+    return Array.from(grouped.values())
+  }, [list.content])
+
   const columns = useMemo(
     () => [
       {
@@ -150,52 +237,96 @@ export default function TimetablesPage() {
         label: t('timetable.teacher'),
       },
       {
-        key: 'periodNumber',
+        key: 'periodCount',
         label: t('timetable.period'),
-        render: (timetable: TeacherTimetable) =>
-          `P${timetable.periodNumber}`,
+        render: (
+          timetable: TeacherTimetableGroup,
+        ) => (
+          <div className="text-center">
+            {timetable.periodCount}
+          </div>
+        ),
       },
       {
-        key: 'subjectName',
+        key: 'subjects',
         label: t('timetable.subject'),
+        render: (
+          timetable: TeacherTimetableGroup,
+        ) => {
+          const subjectLines = []
+
+          for ( let i = 0; i < timetable.subjects.length; i += 2) {
+            subjectLines.push(
+              timetable.subjects
+                .slice(i, i + 2)
+                .join(', '),
+            )
+          }
+
+          return (
+            <div className="whitespace-nowrap">
+              {subjectLines.map((line, index) => (
+                <div key={index}>
+                  {line}
+                </div>
+              ))}
+            </div>
+          )
+        },
       },
       {
         key: 'createdAt',
         label: t('timetable.createdAt'),
+        render: (
+          timetable: TeacherTimetableGroup,
+        ) => timetable.createdAt
+          ? timetable.createdAt.split('T')[0]
+          : '',
       },
       {
         key: 'actions',
         label: t('common.actions'),
-        render: (timetable: TeacherTimetable) => (
-          <div className="ui-action-group">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => startEdit(timetable)}
-            >
-              {t('common.edit')}
-            </Button>
+        render: (
+          timetable: TeacherTimetableGroup,
+        ) => {
+          const firstRecord =
+            timetable.records[0]
 
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => startView(timetable)}
-            >
-              {t('common.view')}
-            </Button>
+          return (
+            <div className="ui-action-group">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() =>
+                  startEdit(timetable)
+                }
+              >
+                {t('common.edit')}
+              </Button>
 
-            <Button
-              type="button"
-              variant="danger"
-              size="sm"
-              onClick={() => setDeleteId(timetable.id)}
-            >
-              {t('common.delete')}
-            </Button>
-          </div>
-        ),
+              <Button
+                type="button"
+                variant="primary"
+                size="sm"
+                onClick={() => startView(timetable)}
+              >
+                {t('common.view')}
+              </Button>
+
+              <Button
+                type="button"
+                variant="danger"
+                size="sm"
+                onClick={() =>
+                  setDeleteId(firstRecord.id)
+                }
+              >
+                {t('common.delete')}
+              </Button>
+            </div>
+          )
+        },
       },
     ],
     [t],
@@ -222,18 +353,35 @@ export default function TimetablesPage() {
         teachers={teachers}
         subjects={subjects}
         classes={classes}
-        onClose={() => setShowForm(false)}
+        mode={editingTimetable ? 'edit' : 'create'}
+        timetable={editingTimetable}
+        onClose={() => {
+          setShowForm(false)
+          setEditingTimetable(null)
+        }}
         onSuccess={() => {
           setShowForm(false)
+          setEditingTimetable(null)
           list.reload()
+        }}
+      />
+
+      <TimetableViewModal
+        open={showViewModal}
+        timetable={viewingTimetable}
+        onClose={() => {
+          setShowViewModal(false)
+          setViewingTimetable(null)
         }}
       />
 
       <div className="card">
         <DataTable
           columns={columns}
-          data={list.content}
-          getRowKey={(timetable) => timetable.id}
+          data={groupedTimetables}
+          getRowKey={(timetable) =>
+            timetable.teacherId
+          }
           emptyMessage={
             list.search
               ? t('common.noResults')
@@ -247,8 +395,8 @@ export default function TimetablesPage() {
           )}
           page={list.page}
           pageSize={list.pageSize}
-          totalElements={list.totalElements}
-          totalPages={list.totalPages}
+          totalElements={groupedTimetables.length}
+          totalPages={1}
           onPageChange={list.setPage}
           onPageSizeChange={list.setPageSize}
           loading={list.loading}

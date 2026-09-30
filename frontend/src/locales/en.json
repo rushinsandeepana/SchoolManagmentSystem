@@ -73,7 +73,10 @@
     "select": "Select",
     "selectAll": "Select All",
     "deselectAll": "Deselect All",
-    "activity": "Activity"
+    "activity": "Activity",
+    "saving": "Saving...",
+    "edit": "Edit",
+    "view": "View"
   },
   "validation": {
     "teacherRequired": "Teacher is required",
@@ -257,6 +260,8 @@
     "createdAt": "Created Date",
     "status": "Status",
     "actions": "Actions",
-    "noTimetable": "කාලසටහන් දත්ත නොමැත"
+    "noTimetable": "No Timetable data available.",
+    "totalPeriods": "Total Periods",
+    "periodHeader": "Periods"
   }
 }
