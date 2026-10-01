@@ -319,7 +319,7 @@ export default function TimetablesPage() {
                 variant="danger"
                 size="sm"
                 onClick={() =>
-                  setDeleteId(firstRecord.id)
+                  setDeleteId(firstRecord.teacherId)
                 }
               >
                 {t('common.delete')}

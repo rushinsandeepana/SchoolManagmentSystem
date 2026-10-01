@@ -4,6 +4,7 @@ import {
   BookOpen,
   CalendarDays,
   CalendarPlus,
+  ClipboardCheck,
   FileText,
   KeyRound,
   LayoutDashboard,
@@ -55,6 +56,16 @@ export function getNavBarItems(
             to: '/admin/classes',
             label: t('nav.classes'),
             icon: School,
+          },
+        ],
+      },
+      {
+        header: t('nav.attendanceManagement'),
+        items: [
+          {
+            to: '/admin/attendance',
+            label: t('nav.teacherAttendance'),
+            icon: ClipboardCheck,
           },
         ],
       },

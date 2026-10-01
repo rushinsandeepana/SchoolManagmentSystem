@@ -8,6 +8,7 @@ import SubjectsPage from '../pages/admin/subject/SubjectsPage'
 import ClassesPage from '../pages/admin/classes/ClassesPage'
 import AssignPeriodsPage from '../pages/admin/periods/AssignPeriodsPage'
 import TimetablesPage from '../pages/admin/timetable/TimetablesPage'
+import TeacherAttendancePage from '../pages/admin/attendance/TeacherAttendancePage'
 import TeacherSchedulePage from '../pages/teacher/schedule/TeacherSchedulePage'
 import PeriodDetailPage from '../pages/PeriodDetailPage'
 import PeriodDetailAddPage from '../pages/PeriodDetailAddPage'
@@ -44,6 +45,7 @@ export default function AppRoutes() {
           <Route path="teachers" element={<TeachersPage />} />
           <Route path="subjects" element={<SubjectsPage />} />
           <Route path="classes" element={<ClassesPage />} />
+          <Route path="attendance" element={<TeacherAttendancePage />} />
           <Route path="periods" element={<AssignPeriodsPage />} />
           <Route path="timetables" element={<TimetablesPage />} />
 

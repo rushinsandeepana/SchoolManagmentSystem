@@ -14,6 +14,8 @@
     "mySchedule": "මගේ කාලසටහන",
     "main": "ප්‍රධාන",
     "academicManagement": "අධ්‍යයන කළමනාකරණය",
+    "attendanceManagement": "පැමිණීම",
+    "teacherAttendance": "ගුරු පැමිණීම",
     "scheduleManagement": "කාලසටහන් කළමනාකරණය",
     "personal": "පුද්ගලික",
     "timetables": "කාලසටහන්"
@@ -264,6 +266,53 @@
     "noTimetable": "කාලසටහන් දත්ත නොමැත",
     "totalPeriods": "කාලපරිච්ඡේද ගණන",
     "periodHeader": "කාලපරිච්ඡේද"
-
+  },
+  "attendance": {
+    "title": "ගුරු පැමිණීම",
+    "subtitle": "දෛනික ව්‍යතිරේක සලකුණු කරන්න — අනෙක් සියල්ල පැමිණි ලෙස සැලකේ",
+    "date": "දිනය",
+    "hint": "නොපැමිණි, නිවාඩු හෝ අර්ධ දින පමණක් සලකුණු කරන්න. අනෙක් සියල්ල ස්වයංක්‍රීයව පැමිණි වේ.",
+    "save": "පැමිණීම සුරකින්න",
+    "saved": "පැමිණීම සාර්ථකව සුරකින ලදී",
+    "savedPreview": "UI පෙරදසුනේ සුරකින ලදී (backend තවම සම්බන්ධ කර නැත)",
+    "exportExcel": "Excel වාර්තාව බාගත කරන්න",
+    "exportDay": "මෙම දින වාර්තාව (.xlsx)",
+    "exportRange": "දින පරාස වාර්තාව (.xlsx)",
+    "exportRangeTitle": "ගුරු පැමිණීම් වාර්තාව (දින පරාසය)",
+    "startDate": "ආරම්භක දිනය",
+    "endDate": "අවසාන දිනය",
+    "downloading": "Excel සකසමින් පවතී...",
+    "downloadSuccess": "පැමිණීම් වාර්තාව සාර්ථකව බාගත කරන ලදී",
+    "downloadError": "Excel වාර්තාව බාගත කිරීම අසාර්ථක විය",
+    "savedBadge": "දත්ත ගබඩාවේ සුරකින ලදී",
+    "draftBadge": "කෙටුම්පතක් / සුරැකී නැත",
+    "markExceptions": "ව්‍යතිරේක සලකුණු කරන්න",
+    "markExceptionsHelp": "අද නොපැමිණි ගුරුවරුන් එකතු කරන්න. ගුරුවරුන් 50+ ක් අතරින් බොහෝ දෙනෙක් පැමිණි විට මෙය පහසුය.",
+    "selectTeacher": "ගුරුවරයා",
+    "addException": "එකතු කරන්න",
+    "removeException": "ඉවත් කරන්න",
+    "noExceptions": "ව්‍යතිරේක නැත — සක්‍රීය ගුරුවරුන් සියල්ල පැමිණි වේ.",
+    "alreadyMarked": "මෙම ගුරුවරයා දැනටමත් ව්‍යතිරේක ලැයිස්තුවේ ඇත",
+    "exceptionAdded": "ව්‍යතිරේකය එකතු කරන ලදී",
+    "fullRoster": "සම්පූර්ණ ලැයිස්තුව",
+    "teachers": "ගුරුවරුන්",
+    "filterAll": "සියලු තත්ත්ව",
+    "searchTeachers": "ගුරුවරුන් සොයන්න...",
+    "emptyRoster": "සක්‍රීය ගුරුවරුන් නොමැත",
+    "markPresent": "පැමිණි ලෙස සලකුණු කරන්න",
+    "status": {
+      "present": "පැමිණි",
+      "absent": "නොපැමිණි",
+      "leave": "නිවාඩු",
+      "halfDay": "අර්ධ දින"
+    },
+    "columns": {
+      "status": "තත්ත්වය",
+      "remark": "සටහන"
+    },
+    "placeholders": {
+      "teacher": "ගුරුවරයා තෝරන්න",
+      "remark": "විකල්ප සටහන"
+    }
   }
 }

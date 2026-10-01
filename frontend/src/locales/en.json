@@ -14,6 +14,8 @@
     "mySchedule": "My Schedule",
     "main": "Main",
     "academicManagement": "Academic Management",
+    "attendanceManagement": "Attendance",
+    "teacherAttendance": "Teacher Attendance",
     "scheduleManagement": "Schedule Management",
     "personal": "Personal",
     "timetables": "Timetables"
@@ -263,5 +265,53 @@
     "noTimetable": "No Timetable data available.",
     "totalPeriods": "Total Periods",
     "periodHeader": "Periods"
+  },
+  "attendance": {
+    "title": "Teacher Attendance",
+    "subtitle": "Mark daily exceptions — all other teachers stay Present",
+    "date": "Date",
+    "hint": "Only mark Absent, Leave, or Half-day. Everyone else is Present automatically.",
+    "save": "Save Attendance",
+    "saved": "Attendance saved successfully",
+    "savedPreview": "Attendance saved in UI preview (backend not connected yet)",
+    "exportExcel": "Export Excel",
+    "exportDay": "Export This Day (.xlsx)",
+    "exportRange": "Export Date Range (.xlsx)",
+    "exportRangeTitle": "Export Teacher Attendance (Date Range)",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "downloading": "Generating Excel...",
+    "downloadSuccess": "Attendance sheet downloaded successfully",
+    "downloadError": "Failed to download Excel sheet",
+    "savedBadge": "Saved in Database",
+    "draftBadge": "Draft / Unsaved",
+    "markExceptions": "Mark Exceptions",
+    "markExceptionsHelp": "Add teachers who are not present today. Ideal when most of 50+ teachers are present.",
+    "selectTeacher": "Teacher",
+    "addException": "Add",
+    "removeException": "Remove",
+    "noExceptions": "No exceptions yet — all active teachers are Present.",
+    "alreadyMarked": "This teacher is already in the exception list",
+    "exceptionAdded": "Exception added",
+    "fullRoster": "Full Roster",
+    "teachers": "teachers",
+    "filterAll": "All statuses",
+    "searchTeachers": "Search teachers...",
+    "emptyRoster": "No active teachers found",
+    "markPresent": "Mark Present",
+    "status": {
+      "present": "Present",
+      "absent": "Absent",
+      "leave": "Leave",
+      "halfDay": "Half-day"
+    },
+    "columns": {
+      "status": "Status",
+      "remark": "Remark"
+    },
+    "placeholders": {
+      "teacher": "Select teacher",
+      "remark": "Optional remark"
+    }
   }
 }
