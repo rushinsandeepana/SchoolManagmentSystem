@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { createPortal } from 'react-dom'
 import { ClipboardCheck } from 'lucide-react'
-import { Button, DataTable, SelectField } from '../../../components/ui'
+import { Button, DataTable, SelectField, TimeRangeField } from '../../../components/ui'
 import { useClientList } from '../../../hooks/useClientList'
 import {
   EXCEPTION_STATUSES,
@@ -24,9 +25,22 @@ type AttendanceRosterCardProps = {
   teachers: Teacher[]
   exceptions: TeacherAttendanceException[]
   loading: boolean
-  onMarkException: (teacherId: number, teacherName: string, status: ExceptionStatus) => void
-  onUpdateExceptionStatus: (teacherId: number, status: ExceptionStatus) => void
+  onMarkException: (
+    teacherId: number,
+    teacherName: string,
+    status: ExceptionStatus,
+    remark?: string
+  ) => void
+  onUpdateExceptionStatus: (teacherId: number, status: ExceptionStatus, remark?: string) => void
   onMarkPresent: (teacherId: number) => void
+}
+
+type PickerState = {
+  teacherId: number
+  teacherName: string
+  action: 'mark' | 'update'
+  type: 'halfDay' | 'shortLeave'
+  anchor: HTMLElement
 }
 
 export default function AttendanceRosterCard({
@@ -39,6 +53,89 @@ export default function AttendanceRosterCard({
 }: AttendanceRosterCardProps) {
   const { t } = useTranslation()
   const [statusFilter, setStatusFilter] = useState<'ALL' | AttendanceStatus>('ALL')
+  const [picker, setPicker] = useState<PickerState | null>(null)
+  const [startTime, setStartTime] = useState('')
+  const [endTime, setEndTime] = useState('')
+  const [pickerPosition, setPickerPosition] = useState<{ top: number; left: number } | null>(null)
+  const pickerRef = useRef<HTMLDivElement>(null)
+  const actionRefs = useRef(new Map<number, HTMLDivElement>())
+
+  const openPicker = useCallback((
+    row: RosterRow,
+    action: PickerState['action'],
+    type: PickerState['type'],
+    anchor: HTMLElement | null
+  ) => {
+    if (!anchor) return
+    setStartTime('')
+    setEndTime('')
+    setPicker({ teacherId: row.id, teacherName: row.fullName, action, type, anchor })
+    setPickerPosition(null)
+  }, [])
+
+  useEffect(() => {
+    if (!picker) return undefined
+
+    const updatePickerPosition = () => {
+      const anchorRect = picker.anchor.getBoundingClientRect()
+      const pickerHeight = pickerRef.current?.offsetHeight ?? 240
+      const pickerWidth = pickerRef.current?.offsetWidth ?? 320
+      const spaceBelow = window.innerHeight - anchorRect.bottom
+      const top = spaceBelow >= pickerHeight + 8
+        ? anchorRect.bottom + 8
+        : Math.max(8, anchorRect.top - pickerHeight - 8)
+      const left = Math.min(
+        Math.max(8, anchorRect.left),
+        Math.max(8, window.innerWidth - pickerWidth - 8)
+      )
+
+      setPickerPosition({ top, left })
+    }
+
+    const closeOnOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (!pickerRef.current?.contains(target) && !picker.anchor.contains(target)) {
+        setPicker(null)
+      }
+    }
+
+    updatePickerPosition()
+    document.addEventListener('mousedown', closeOnOutsideClick)
+    window.addEventListener('resize', updatePickerPosition)
+    window.addEventListener('scroll', updatePickerPosition, true)
+    const resizeObserver = pickerRef.current
+      ? new ResizeObserver(updatePickerPosition)
+      : null
+    if (pickerRef.current) resizeObserver?.observe(pickerRef.current)
+
+    return () => {
+      document.removeEventListener('mousedown', closeOnOutsideClick)
+      window.removeEventListener('resize', updatePickerPosition)
+      window.removeEventListener('scroll', updatePickerPosition, true)
+      resizeObserver?.disconnect()
+    }
+  }, [picker])
+
+  const savePickerSelection = (status: ExceptionStatus, remark: string) => {
+    if (!picker) return
+
+    if (picker.action === 'mark') {
+      onMarkException(picker.teacherId, picker.teacherName, status, remark)
+    } else {
+      onUpdateExceptionStatus(picker.teacherId, status, remark)
+    }
+    setPicker(null)
+  }
+
+  const handleStatusSelection = useCallback((row: RosterRow, value: string) => {
+    if (value === 'HALF_DAY') {
+      openPicker(row, 'update', 'halfDay', actionRefs.current.get(row.id) ?? null)
+    } else if (value === 'SHORT_LEAVE') {
+      openPicker(row, 'update', 'shortLeave', actionRefs.current.get(row.id) ?? null)
+    } else {
+      onUpdateExceptionStatus(row.id, value as ExceptionStatus)
+    }
+  }, [onUpdateExceptionStatus, openPicker])
 
   const exceptionMap = useMemo(() => {
     return new Map(exceptions.map((item) => [item.teacherId, item]))
@@ -46,7 +143,7 @@ export default function AttendanceRosterCard({
 
   const rosterRows = useMemo<RosterRow[]>(() => {
     return teachers.map((teacher) => {
-      const exception = exceptionMap.get(teacher.id)
+      const exception = exceptionMap.get(teacher.id)      
       return {
         id: teacher.id,
         fullName: teacher.fullName,
@@ -90,49 +187,87 @@ export default function AttendanceRosterCard({
         key: 'actions',
         label: t('common.actions'),
         render: (row: RosterRow) => (
-          <div className="ui-action-group">
-            {row.isException ? (
-              <>
-                <SelectField
-                  value={row.status}
-                  onChange={(event) =>
-                    onUpdateExceptionStatus(row.id, event.target.value as ExceptionStatus)
-                  }
-                  options={EXCEPTION_STATUSES.map((st) => ({
-                    value: st,
-                    label: getStatusLabel(st, t),
-                  }))}
-                  className="min-w-[8.5rem]"
-                />
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onMarkPresent(row.id)}
-                >
-                  {t('attendance.markPresent')}
-                </Button>
-              </>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {EXCEPTION_STATUSES.map((st) => (
+          <div
+            ref={(element) => {
+              if (element) actionRefs.current.set(row.id, element)
+              else actionRefs.current.delete(row.id)
+            }}
+            className="ui-action-group"
+          >
+              {row.isException ? (
+                <>
+                  <SelectField
+                    value={row.status}
+                    onChange={(event) => handleStatusSelection(row, event.target.value)}
+                    options={[
+                      ...EXCEPTION_STATUSES.map((st) => ({
+                        value: st,
+                        label: getStatusLabel(st, t),
+                      })),
+                      { value: 'SHORT_LEAVE', label: t('attendance.shortLeave') },
+                    ]}
+                    className="min-w-[8.5rem]"
+                  />
                   <Button
-                    key={st}
                     type="button"
-                    variant="secondary"
+                    variant="secondary2"
                     size="sm"
-                    onClick={() => onMarkException(row.id, row.fullName, st)}
+                    onClick={() => onMarkPresent(row.id)}
                   >
-                    {getStatusLabel(st, t)}
+                    {t('attendance.markPresent')}
                   </Button>
-                ))}
-              </div>
-            )}
+                </>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {EXCEPTION_STATUSES.map((st) => (
+                    <Button
+                      key={st}
+                      type="button"
+                      variant="secondary2"
+                      size="sm"
+                      onClick={() =>
+                        st === 'HALF_DAY'
+                          ? openPicker(
+                              row,
+                              'mark',
+                              'halfDay',
+                              actionRefs.current.get(row.id) ?? null
+                            )
+                          : onMarkException(row.id, row.fullName, st)
+                      }
+                    >
+                      {getStatusLabel(st, t)}
+                    </Button>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="secondary2"
+                    size="sm"
+                    onClick={() =>
+                      openPicker(
+                        row,
+                        'mark',
+                        'shortLeave',
+                        actionRefs.current.get(row.id) ?? null
+                      )
+                    }
+                  >
+                    {t('attendance.shortLeave')}
+                  </Button>
+                </div>
+              )}
           </div>
         ),
       },
     ],
-    [t, onMarkException, onUpdateExceptionStatus, onMarkPresent]
+    [
+      t,
+      openPicker,
+      handleStatusSelection,
+      onMarkException,
+      onUpdateExceptionStatus,
+      onMarkPresent,
+    ]
   )
 
   return (
@@ -184,6 +319,99 @@ export default function AttendanceRosterCard({
         onPageSizeChange={list.setPageSize}
         loading={loading}
       />
+      {picker && pickerPosition && createPortal(
+        <div
+          ref={pickerRef}
+          className={`card fixed z-[1200] max-h-[calc(100dvh-1rem)] overflow-y-auto p-2.5 shadow-lg ${
+            picker.type === 'shortLeave'
+              ? 'w-[min(16rem,calc(100vw-1rem))]'
+              : 'w-[min(20rem,calc(100vw-1rem))]'
+          }`}
+          style={pickerPosition}
+          role="dialog"
+          aria-label={
+            picker.type === 'halfDay'
+              ? t('attendance.chooseHalfDayPeriod')
+              : t('attendance.shortLeaveTimeRange')
+          }
+        >
+          {picker.type === 'halfDay' ? (
+            <div className="flex flex-col gap-2">
+              <p className="m-0 text-sm font-medium">
+                {t('attendance.chooseHalfDayPeriod')}
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() =>
+                    savePickerSelection(
+                      'HALF_DAY',
+                      t('attendance.halfDayRemark', {
+                        period: t('attendance.period.morning'),
+                      })
+                    )
+                  }
+                >
+                  {t('attendance.period.morning')}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() =>
+                    savePickerSelection(
+                      'HALF_DAY',
+                      t('attendance.halfDayRemark', {
+                        period: t('attendance.period.afternoon'),
+                      })
+                    )
+                  }
+                >
+                  {t('attendance.period.afternoon')}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <TimeRangeField
+                startTime={startTime}
+                endTime={endTime}
+                startLabel={t('attendance.startTime')}
+                endLabel={t('attendance.endTime')}
+                placeholder={t('attendance.selectTime')}
+                onStartTimeChange={setStartTime}
+                onEndTimeChange={setEndTime}
+              />
+              <p className="m-0 text-xs font-medium">
+                {t('attendance.shortLeaveTimeRange')}
+              </p>
+              <Button
+                type="button"
+                size="sm"
+                disabled={!startTime || !endTime || endTime <= startTime}
+                onClick={() =>
+                  savePickerSelection(
+                    'LEAVE',
+                    t('attendance.shortLeaveRemark', { startTime, endTime })
+                  )
+                }
+              >
+                {t('common.save')}
+              </Button>
+            </div>
+          )}
+          <Button
+            type="button"
+            variant="secondary2"
+            size="sm"
+            className="mt-2"
+            onClick={() => setPicker(null)}
+          >
+            {t('common.cancel')}
+          </Button>
+        </div>,
+        document.body
+      )}
     </div>
   )
 }

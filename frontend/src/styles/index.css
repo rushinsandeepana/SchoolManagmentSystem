@@ -428,6 +428,22 @@
     @apply bg-danger text-white;
   }
 
+  .ui-button--rose {
+    @apply bg-rose-50 text-rose-700 ;
+  }
+
+  .ui-button--rose:hover {
+    @apply bg-surface-2;
+  }
+
+  .ui-button--secondary2 {
+    @apply bg-transparent border-border text-text;
+  }
+
+  .ui-button--secondary2:hover {
+    @apply bg-rose-50 text-rose-700;
+  }
+
   .ui-button--sm {
     @apply px-2.5 py-1.5 text-sm;
   }

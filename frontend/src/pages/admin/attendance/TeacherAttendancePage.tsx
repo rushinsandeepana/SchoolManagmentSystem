@@ -131,9 +131,17 @@ export default function TeacherAttendancePage() {
     showToast(t('attendance.exceptionAdded'), 'success')
   }
 
-  const handleUpdateExceptionStatus = (teacherId: number, status: ExceptionStatus) => {
+  const handleUpdateExceptionStatus = (
+    teacherId: number,
+    status: ExceptionStatus,
+    remark?: string
+  ) => {
     setExceptionsForDate(
-      exceptions.map((item) => (item.teacherId === teacherId ? { ...item, status } : item))
+      exceptions.map((item) =>
+        item.teacherId === teacherId
+          ? { ...item, status, ...(remark === undefined ? {} : { remark }) }
+          : item
+      )
     )
   }
 
@@ -144,11 +152,12 @@ export default function TeacherAttendancePage() {
   const handleMarkExceptionFromRoster = (
     teacherId: number,
     teacherName: string,
-    status: ExceptionStatus
+    status: ExceptionStatus,
+    remark?: string
   ) => {
     setExceptionsForDate([
       ...exceptions,
-      { teacherId, teacherName, status },
+      { teacherId, teacherName, status, remark },
     ])
   }
 
