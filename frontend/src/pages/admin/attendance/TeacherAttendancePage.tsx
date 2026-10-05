@@ -134,12 +134,24 @@ export default function TeacherAttendancePage() {
   const handleUpdateExceptionStatus = (
     teacherId: number,
     status: ExceptionStatus,
-    remark?: string
+    remark?: string,
+    startTime?: string,
+    endTime?: string
   ) => {
     setExceptionsForDate(
       exceptions.map((item) =>
         item.teacherId === teacherId
-          ? { ...item, status, ...(remark === undefined ? {} : { remark }) }
+          ? {
+              ...item,
+              status,
+              ...(remark === undefined ? {} : { remark }),
+              startTime: status === 'LEAVE' || status === 'HALF_DAY'
+                ? startTime ?? item.startTime
+                : undefined,
+              endTime: status === 'LEAVE' || status === 'HALF_DAY'
+                ? endTime ?? item.endTime
+                : undefined,
+            }
           : item
       )
     )
@@ -153,15 +165,16 @@ export default function TeacherAttendancePage() {
     teacherId: number,
     teacherName: string,
     status: ExceptionStatus,
-    remark?: string
+    remark?: string,
+    startTime?: string,
+    endTime?: string
   ) => {
     setExceptionsForDate([
       ...exceptions,
-      { teacherId, teacherName, status, remark },
+      { teacherId, teacherName, status, remark, startTime, endTime },
     ])
   }
 
-  // 3. Save attendance
   const onSave = async () => {
     setSaving(true)
     try {
@@ -184,7 +197,6 @@ export default function TeacherAttendancePage() {
     }
   }
 
-  // 4. Export single day Excel
   const onExportDaily = async () => {
     setExportingDay(true)
     try {
@@ -199,7 +211,6 @@ export default function TeacherAttendancePage() {
     }
   }
 
-  // 5. Export date range Excel
   const onExportRange = async (startDate: string, endDate: string) => {
     if (endDate < startDate) {
       showToast('End date cannot be earlier than start date', 'error')

@@ -1,6 +1,5 @@
 export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LEAVE' | 'HALF_DAY'
 
-/** Non-present statuses that admins mark as exceptions */
 export type ExceptionStatus = Exclude<AttendanceStatus, 'PRESENT'>
 
 export type TeacherAttendanceException = {
@@ -8,6 +7,8 @@ export type TeacherAttendanceException = {
   teacherName?: string
   status: ExceptionStatus
   remark?: string
+  startTime?: string
+  endTime?: string
 }
 
 export type TeacherAttendanceRecord = {

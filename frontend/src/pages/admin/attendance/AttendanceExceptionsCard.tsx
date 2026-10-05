@@ -52,6 +52,7 @@ export default function AttendanceExceptionsCard({
   const detailPickerRef = useRef<HTMLDivElement>(null)
   const statusControlRefs = useRef(new Map<number, HTMLDivElement>())
   const addStatusRef = useRef<HTMLDivElement>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const openDetailPicker = (
     mode: DetailPicker['mode'],
@@ -85,6 +86,13 @@ export default function AttendanceExceptionsCard({
   }
 
   const handleAdd = () => {
+    const nextErrors: Partial<Record<keyof TeacherAttendanceException, string>> = {}
+    if (remark.trim().length > 20) nextErrors.remark = t('validation.remarkMaxLength', { max: 20 })
+    
+    if (Object.keys(nextErrors).length > 0) {
+      setError(nextErrors.remark ?? null)
+      return
+    }
     if (!selectedTeacherId) return
     const detail = isShortLeave
       ? t('attendance.shortLeaveRemark', { startTime, endTime })
@@ -101,6 +109,7 @@ export default function AttendanceExceptionsCard({
     setHalfDayPeriod('')
     setStartTime('')
     setEndTime('')
+    setError(nextErrors.remark ?? null)
   }
 
   const handleRowStatusChange = (teacherId: number, value: string) => {
@@ -209,8 +218,8 @@ export default function AttendanceExceptionsCard({
       <p className="muted mt-0 mb-4">{t('attendance.markExceptionsHelp')}</p>
 
       {/* Inputs to add new exception */}
-      <div className="grid min-w-0 grid-cols-1 items-end gap-3 sm:grid-cols-2 xl:grid-cols-6">
-        <div className="min-w-0 sm:col-span-1 xl:col-span-2">
+      <div className="grid min-w-0 grid-cols-1 items-start gap-3 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="min-w-0 sm:col-span-1 lg:col-span-2">
           <SelectField
             label={t('attendance.selectTeacher')}
             value={selectedTeacherId}
@@ -237,23 +246,26 @@ export default function AttendanceExceptionsCard({
             ]}
           />
         </div>
-        <div className="min-w-0 sm:col-span-2 xl:col-span-2">
+        <div className="min-w-0 sm:col-span-2 lg:col-span-2">
           <InputField
             label={t('attendance.columns.remark')}
             value={remark}
+            error={error ?? undefined}
             onChange={(event) => setRemark(event.target.value)}
             placeholder={t('attendance.placeholders.remark')}
             className="w-full min-w-0"
           />
         </div>
-        <Button
-          type="button"
-          className="w-full"
-          onClick={handleAdd}
-          disabled={loadingTeachers || !canAdd}
-        >
-          {t('attendance.addException')}
-        </Button>
+        <div className="min-w-0 pt-0 lg:pt-6">
+          <Button
+            type="button"
+            className="w-full"
+            onClick={handleAdd}
+            disabled={loadingTeachers || !canAdd}
+          >
+            {t('attendance.addException')}
+          </Button>
+        </div>
       </div>
 
       {/* Exception list table */}

@@ -102,7 +102,11 @@
     "classRequired": "පන්තිය අවශ්‍යයි",
     "assignmentFieldsRequired": "කරුණාකර අවශ්‍ය සියලුම ක්ෂේත්‍ර සම්පූර්ණ කරන්න",
     "subjectTypeRequired": "විෂය වර්ගය අවශ්‍යයි",
-    "statusRequired": "තත්ත්වය අවශ්‍යයි"
+    "statusRequired": "තත්ත්වය අවශ්‍යයි",
+    "gradeRequired": "ශ්‍රේණිය අවශ්‍යයි",
+    "sectionRequired": "අංශය අවශ්‍යයි",
+    "duplicate": "මෙම ඇතුළත් කිරීම දැනටමත් පවතී",
+    "remarkMaxLength": "උපරිම අක්ෂර 20ක් පමණක් අවසර ඇත"
   },
   "dashboard": {
     "title": "උපකරණ පුවරුව",
@@ -299,9 +303,10 @@
     "filterAll": "සියලු තත්ත්ව",
     "searchTeachers": "ගුරුවරුන් සොයන්න...",
     "emptyRoster": "සක්‍රීය ගුරුවරුන් නොමැත",
-    "markPresent": "පැමිණි ලෙස සලකුණු කරන්න",
+    "markPresent": "පැමිණි",
     "shortLeave": "කෙටි නිවාඩුව",
     "chooseHalfDayPeriod": "අර්ධ දින කාලය තෝරන්න",
+    "remarkTooLong": "සටහන දිග වැඩි ය (උපරිම අක්ෂර 20)",
     "period": {
       "morning": "පෙරවරුව",
       "afternoon": "පස්වරුව"
@@ -320,7 +325,10 @@
     },
     "columns": {
       "status": "තත්ත්වය",
-      "remark": "සටහන"
+      "remark": "සටහන",
+      "teacherName": "ගුරුවරයාගේ නම",
+      "startTime": "ආරම්භක වේලාව",
+      "endTime": "අවසන් වේලාව"
     },
     "placeholders": {
       "teacher": "ගුරුවරයා තෝරන්න",

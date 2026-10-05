@@ -19,6 +19,8 @@ type RosterRow = {
   status: AttendanceStatus
   remark?: string
   isException: boolean
+  startTime?: string
+  endTime?: string
 }
 
 type AttendanceRosterCardProps = {
@@ -29,9 +31,11 @@ type AttendanceRosterCardProps = {
     teacherId: number,
     teacherName: string,
     status: ExceptionStatus,
-    remark?: string
+    remark?: string,
+    startTime?: string,
+    endTime?: string
   ) => void
-  onUpdateExceptionStatus: (teacherId: number, status: ExceptionStatus, remark?: string) => void
+  onUpdateExceptionStatus: (teacherId: number, status: ExceptionStatus, remark?: string, startTime?: string, endTime?: string) => void
   onMarkPresent: (teacherId: number) => void
 }
 
@@ -41,6 +45,28 @@ type PickerState = {
   action: 'mark' | 'update'
   type: 'halfDay' | 'shortLeave'
   anchor: HTMLElement
+}
+
+const PRESENT_START_TIME = '07:30'
+const PRESENT_END_TIME = '13:30'
+const STATUS_BUTTON_CODES: Record<AttendanceStatus | 'SHORT_LEAVE', string> = {
+  PRESENT: 'PR',
+  ABSENT: 'AB',
+  LEAVE: 'LV',
+  SHORT_LEAVE: 'SL',
+  HALF_DAY: 'HD',
+}
+
+const formatRosterTime = (time?: string) => {
+  if (!time) return '—'
+
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time)
+  if (!match) return time
+
+  const hours24 = Number(match[1])
+  const hours12 = hours24 % 12 || 12
+  const period = hours24 < 12 ? 'AM' : 'PM'
+  return `${hours12}.${match[2]} ${period}`
 }
 
 export default function AttendanceRosterCard({
@@ -116,13 +142,13 @@ export default function AttendanceRosterCard({
     }
   }, [picker])
 
-  const savePickerSelection = (status: ExceptionStatus, remark: string) => {
+  const savePickerSelection = (status: ExceptionStatus, remark: string, startTime?: string, endTime?: string) => {
     if (!picker) return
 
     if (picker.action === 'mark') {
-      onMarkException(picker.teacherId, picker.teacherName, status, remark)
+      onMarkException(picker.teacherId, picker.teacherName, status, remark, startTime, endTime)
     } else {
-      onUpdateExceptionStatus(picker.teacherId, status, remark)
+      onUpdateExceptionStatus(picker.teacherId, status, remark, startTime, endTime)
     }
     setPicker(null)
   }
@@ -143,13 +169,17 @@ export default function AttendanceRosterCard({
 
   const rosterRows = useMemo<RosterRow[]>(() => {
     return teachers.map((teacher) => {
-      const exception = exceptionMap.get(teacher.id)      
+      const exception = exceptionMap.get(teacher.id)
+      const status = exception?.status ?? 'PRESENT'
+
       return {
         id: teacher.id,
         fullName: teacher.fullName,
         username: teacher.username,
-        status: exception?.status ?? 'PRESENT',
+        status,
         remark: exception?.remark,
+        startTime: exception?.startTime ?? (status === 'PRESENT' ? PRESENT_START_TIME : undefined),
+        endTime: exception?.endTime ?? (status === 'PRESENT' ? PRESENT_END_TIME : undefined),
         isException: Boolean(exception),
       }
     })
@@ -184,6 +214,16 @@ export default function AttendanceRosterCard({
         render: (row: RosterRow) => row.remark || '—',
       },
       {
+        key: 'startTime',
+        label: t('attendance.columns.startTime'),
+        render: (row: RosterRow) => formatRosterTime(row.startTime),
+      },
+      {
+        key: 'endTime',
+        label: t('attendance.columns.endTime'),
+        render: (row: RosterRow) => formatRosterTime(row.endTime),
+      },
+      {
         key: 'actions',
         label: t('common.actions'),
         render: (row: RosterRow) => (
@@ -212,9 +252,11 @@ export default function AttendanceRosterCard({
                     type="button"
                     variant="secondary2"
                     size="sm"
+                    title={t('attendance.markPresent')}
+                    aria-label={t('attendance.markPresent')}
                     onClick={() => onMarkPresent(row.id)}
                   >
-                    {t('attendance.markPresent')}
+                    {STATUS_BUTTON_CODES.PRESENT}
                   </Button>
                 </>
               ) : (
@@ -225,6 +267,8 @@ export default function AttendanceRosterCard({
                       type="button"
                       variant="secondary2"
                       size="sm"
+                      title={getStatusLabel(st, t)}
+                      aria-label={getStatusLabel(st, t)}
                       onClick={() =>
                         st === 'HALF_DAY'
                           ? openPicker(
@@ -236,13 +280,15 @@ export default function AttendanceRosterCard({
                           : onMarkException(row.id, row.fullName, st)
                       }
                     >
-                      {getStatusLabel(st, t)}
+                      {STATUS_BUTTON_CODES[st]}
                     </Button>
                   ))}
                   <Button
                     type="button"
                     variant="secondary2"
                     size="sm"
+                    title={t('attendance.shortLeave')}
+                    aria-label={t('attendance.shortLeave')}
                     onClick={() =>
                       openPicker(
                         row,
@@ -252,7 +298,7 @@ export default function AttendanceRosterCard({
                       )
                     }
                   >
-                    {t('attendance.shortLeave')}
+                    {STATUS_BUTTON_CODES.SHORT_LEAVE}
                   </Button>
                 </div>
               )}
@@ -349,7 +395,9 @@ export default function AttendanceRosterCard({
                       'HALF_DAY',
                       t('attendance.halfDayRemark', {
                         period: t('attendance.period.morning'),
-                      })
+                      }),
+                      '07:30',
+                      '10:30'
                     )
                   }
                 >
@@ -363,7 +411,9 @@ export default function AttendanceRosterCard({
                       'HALF_DAY',
                       t('attendance.halfDayRemark', {
                         period: t('attendance.period.afternoon'),
-                      })
+                      }),
+                      '10:30',
+                      '13:30'
                     )
                   }
                 >
@@ -392,7 +442,9 @@ export default function AttendanceRosterCard({
                 onClick={() =>
                   savePickerSelection(
                     'LEAVE',
-                    t('attendance.shortLeaveRemark', { startTime, endTime })
+                    t('attendance.shortLeave'),
+                    startTime,
+                    endTime
                   )
                 }
               >

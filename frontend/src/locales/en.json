@@ -102,7 +102,11 @@
     "classRequired": "Class is required",
     "assignmentFieldsRequired": "Please complete all required fields",
     "subjectTypeRequired": "Subject type is required",
-    "statusRequired": "Status is required"
+    "statusRequired": "Status is required",
+    "gradeRequired": "Grade is required",
+    "sectionRequired": "Section is required",
+    "duplicate": "This entry already exists",
+    "remarkMaxLength": "maximum 20 characters allowed"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -298,9 +302,10 @@
     "filterAll": "All statuses",
     "searchTeachers": "Search teachers...",
     "emptyRoster": "No active teachers found",
-    "markPresent": "Mark Present",
+    "markPresent": "Present",
     "shortLeave": "Short leave",
     "chooseHalfDayPeriod": "Choose which half of the day",
+    "remarkTooLong": "Remark is too long (maximum 20 characters)",
     "period": {
       "morning": "Morning",
       "afternoon": "Afternoon"
@@ -319,7 +324,10 @@
     },
     "columns": {
       "status": "Status",
-      "remark": "Remark"
+      "remark": "Remark",
+      "teacherName": "Teacher Name",
+      "startTime": "Start Time",
+      "endTime": "End Time"
     },
     "placeholders": {
       "teacher": "Select teacher",
