@@ -315,7 +315,7 @@
     "startTime": "Start time",
     "endTime": "End time",
     "selectTime": "Select time",
-    "shortLeaveRemark": "Short leave: {{startTime}}–{{endTime}}",
+    "shortLeaveRemark": "Short leave",
     "status": {
       "present": "Present",
       "absent": "Absent",

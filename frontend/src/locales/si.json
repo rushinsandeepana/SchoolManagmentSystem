@@ -316,7 +316,7 @@
     "startTime": "ආරම්භක වේලාව",
     "endTime": "අවසන් වේලාව",
     "selectTime": "වේලාව තෝරන්න",
-    "shortLeaveRemark": "කෙටි නිවාඩු: {{startTime}}–{{endTime}}",
+    "shortLeaveRemark": "කෙටි නිවාඩු",
     "status": {
       "present": "පැමිණි",
       "absent": "නොපැමිණි",

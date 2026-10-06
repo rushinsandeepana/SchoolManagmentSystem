@@ -65,6 +65,8 @@ export default function TeacherAttendancePage() {
             teacherName: r.teacherName,
             status: r.status as ExceptionStatus,
             remark: r.remark,
+            startTime: r.startTime,
+            endTime: r.endTime,
           }))
 
         setExceptionsByDate((prev) => ({ ...prev, [date]: backendExceptions }))
@@ -110,7 +112,13 @@ export default function TeacherAttendancePage() {
     [date]
   )
 
-  const handleAddException = (teacherId: number, status: ExceptionStatus, remark: string) => {
+  const handleAddException = (
+    teacherId: number,
+    status: ExceptionStatus,
+    remark: string,
+    startTime?: string,
+    endTime?: string
+  ) => {
     const teacher = teachers.find((item) => item.id === teacherId)
     if (!teacher) return
 
@@ -126,6 +134,8 @@ export default function TeacherAttendancePage() {
         teacherName: teacher.fullName,
         status,
         remark: remark.trim() || undefined,
+        startTime,
+        endTime,
       },
     ])
     showToast(t('attendance.exceptionAdded'), 'success')
@@ -184,6 +194,8 @@ export default function TeacherAttendancePage() {
           teacherId: e.teacherId,
           status: e.status,
           remark: e.remark,
+          startTime: e.startTime,
+          endTime: e.endTime,
         })),
       }
       await attendanceApi.saveDaily(payload)
@@ -230,7 +242,7 @@ export default function TeacherAttendancePage() {
       setExportingRange(false)
     }
   }
-
+console.log("exceptions", exceptions);
   return (
     <div className="fade-in">
       {/* Top Header */}

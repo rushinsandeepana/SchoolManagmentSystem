@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { createPortal } from 'react-dom'
-import { UserMinus } from 'lucide-react'
+import { Trash2, UserMinus } from 'lucide-react'
 import { Button, InputField, SelectField, TimeRangeField } from '../../../components/ui'
 import {
   EXCEPTION_STATUSES,
@@ -15,8 +15,20 @@ type AttendanceExceptionsCardProps = {
   availableTeachers: Teacher[]
   exceptions: TeacherAttendanceException[]
   loadingTeachers: boolean
-  onAddException: (teacherId: number, status: ExceptionStatus, remark: string) => void
-  onUpdateStatus: (teacherId: number, status: ExceptionStatus, remark?: string) => void
+  onAddException: (
+    teacherId: number,
+    status: ExceptionStatus,
+    remark: string,
+    startTime?: string,
+    endTime?: string
+  ) => void
+  onUpdateStatus: (
+    teacherId: number,
+    status: ExceptionStatus,
+    remark?: string,
+    startTime?: string,
+    endTime?: string
+  ) => void
   onRemoveException: (teacherId: number) => void
 }
 
@@ -25,6 +37,26 @@ type DetailPicker = {
   teacherId?: number
   type: 'halfDay' | 'shortLeave'
   anchor: HTMLElement
+}
+
+const PRESENT_START_TIME = '07:30'
+const PRESENT_END_TIME = '13:30'
+
+const halfDayTimeRange = (period: 'morning' | 'afternoon') =>
+  period === 'morning'
+    ? { startTime: PRESENT_START_TIME, endTime: '10:30' }
+    : { startTime: '10:30', endTime: PRESENT_END_TIME }
+
+const formatTime = (time?: string) => {
+  if (!time) return '—'
+
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time)
+  if (!match) return time
+
+  const hours24 = Number(match[1])
+  const hours12 = hours24 % 12 || 12
+  const period = hours24 < 12 ? 'AM' : 'PM'
+  return `${hours12}.${match[2]} ${period}`
 }
 
 export default function AttendanceExceptionsCard({
@@ -42,8 +74,8 @@ export default function AttendanceExceptionsCard({
   const [remark, setRemark] = useState('')
   const [isShortLeave, setIsShortLeave] = useState(false)
   const [halfDayPeriod, setHalfDayPeriod] = useState<'morning' | 'afternoon' | ''>('')
-  const [startTime, setStartTime] = useState('')
-  const [endTime, setEndTime] = useState('')
+  const [startTime, setStartTime] = useState(PRESENT_START_TIME)
+  const [endTime, setEndTime] = useState(PRESENT_END_TIME)
   const [detailPicker, setDetailPicker] = useState<DetailPicker | null>(null)
   const [pickerHalfDayPeriod, setPickerHalfDayPeriod] = useState<'morning' | 'afternoon' | ''>('')
   const [pickerStartTime, setPickerStartTime] = useState('')
@@ -61,9 +93,26 @@ export default function AttendanceExceptionsCard({
     teacherId?: number
   ) => {
     if (!anchor) return
-    setPickerHalfDayPeriod('')
-    setPickerStartTime('')
-    setPickerEndTime('')
+    const existingException = mode === 'update' && teacherId !== undefined
+      ? exceptions.find((item) => item.teacherId === teacherId)
+      : undefined
+    setPickerHalfDayPeriod(
+      type === 'halfDay' && existingException?.startTime === '10:30'
+        ? 'afternoon'
+        : type === 'halfDay' && existingException?.startTime === PRESENT_START_TIME
+          ? 'morning'
+          : ''
+    )
+    setPickerStartTime(
+      type === 'shortLeave'
+        ? existingException?.startTime ?? PRESENT_START_TIME
+        : ''
+    )
+    setPickerEndTime(
+      type === 'shortLeave'
+        ? existingException?.endTime ?? PRESENT_END_TIME
+        : ''
+    )
     setDetailPicker({ mode, teacherId, type, anchor })
     setDetailPickerPosition(null)
   }
@@ -72,8 +121,8 @@ export default function AttendanceExceptionsCard({
     setIsShortLeave(value === 'SHORT_LEAVE')
     setStatus(value === 'SHORT_LEAVE' ? 'LEAVE' : value as ExceptionStatus)
     setHalfDayPeriod('')
-    setStartTime('')
-    setEndTime('')
+    setStartTime(value === 'SHORT_LEAVE' ? PRESENT_START_TIME : '')
+    setEndTime(value === 'SHORT_LEAVE' ? PRESENT_END_TIME : '')
     if (value === 'HALF_DAY' || value === 'SHORT_LEAVE') {
       openDetailPicker(
         'add',
@@ -94,21 +143,34 @@ export default function AttendanceExceptionsCard({
       return
     }
     if (!selectedTeacherId) return
-    const detail = isShortLeave
-      ? t('attendance.shortLeaveRemark', { startTime, endTime })
+    const enteredRemark = remark.trim()
+    const fallbackRemark = isShortLeave
+      ? t('attendance.shortLeave')
       : status === 'HALF_DAY' && halfDayPeriod
         ? t('attendance.halfDayRemark', {
             period: t(`attendance.period.${halfDayPeriod}`),
           })
         : ''
-    onAddException(Number(selectedTeacherId), status, [detail, remark.trim()].filter(Boolean).join(' — '))
+    const selectedTimeRange: { startTime?: string; endTime?: string } =
+      status === 'HALF_DAY' && halfDayPeriod
+      ? halfDayTimeRange(halfDayPeriod)
+      : isShortLeave
+        ? { startTime, endTime }
+        : {}
+    onAddException(
+      Number(selectedTeacherId),
+      status,
+      enteredRemark || fallbackRemark,
+      selectedTimeRange.startTime,
+      selectedTimeRange.endTime
+    )
     setSelectedTeacherId('')
     setRemark('')
     setStatus('ABSENT')
     setIsShortLeave(false)
     setHalfDayPeriod('')
-    setStartTime('')
-    setEndTime('')
+    setStartTime(PRESENT_START_TIME)
+    setEndTime(PRESENT_END_TIME)
     setError(nextErrors.remark ?? null)
   }
 
@@ -181,13 +243,16 @@ export default function AttendanceExceptionsCard({
       ? t('attendance.halfDayRemark', {
           period: t(`attendance.period.${pickerHalfDayPeriod}`),
         })
-      : t('attendance.shortLeaveRemark', {
-          startTime: pickerStartTime,
-          endTime: pickerEndTime,
-        })
+      : t('attendance.shortLeaveRemark')
 
     if (detailPicker.mode === 'add') {
-      if (detailPicker.type === 'halfDay') setHalfDayPeriod(pickerHalfDayPeriod)
+      if (detailPicker.type === 'halfDay') {
+        if (!pickerHalfDayPeriod) return
+        setHalfDayPeriod(pickerHalfDayPeriod)
+        const timeRange = halfDayTimeRange(pickerHalfDayPeriod)
+        setStartTime(timeRange.startTime)
+        setEndTime(timeRange.endTime)
+      }
       else {
         setStartTime(pickerStartTime)
         setEndTime(pickerEndTime)
@@ -198,7 +263,20 @@ export default function AttendanceExceptionsCard({
 
     if (detailPicker.teacherId === undefined) return
     const statusValue: ExceptionStatus = detailPicker.type === 'halfDay' ? 'HALF_DAY' : 'LEAVE'
-    onUpdateStatus(detailPicker.teacherId, statusValue, detail)
+    let selectedTimeRange: { startTime: string; endTime: string }
+    if (detailPicker.type === 'halfDay') {
+      if (!pickerHalfDayPeriod) return
+      selectedTimeRange = halfDayTimeRange(pickerHalfDayPeriod)
+    } else {
+      selectedTimeRange = { startTime: pickerStartTime, endTime: pickerEndTime }
+    }
+    onUpdateStatus(
+      detailPicker.teacherId,
+      statusValue,
+      detail,
+      selectedTimeRange.startTime,
+      selectedTimeRange.endTime
+    )
     setDetailPicker(null)
   }
 
@@ -277,6 +355,8 @@ export default function AttendanceExceptionsCard({
                 <th>{t('teacher.fullName')}</th>
                 <th>{t('attendance.columns.status')}</th>
                 <th>{t('attendance.columns.remark')}</th>
+                <th>{t('attendance.columns.startTime')}</th>
+                <th>{t('attendance.columns.endTime')}</th>
                 <th>{t('common.actions')}</th>
               </tr>
             </thead>
@@ -290,6 +370,8 @@ export default function AttendanceExceptionsCard({
                     </span>
                   </td>
                   <td>{item.remark || '—'}</td>
+                  <td>{formatTime(item.startTime ?? PRESENT_START_TIME)}</td>
+                  <td>{formatTime(item.endTime ?? PRESENT_END_TIME)}</td>
                   <td>
                     <div className="ui-action-group">
                       <div className="flex flex-col gap-2">
@@ -321,7 +403,8 @@ export default function AttendanceExceptionsCard({
                         size="sm"
                         onClick={() => onRemoveException(item.teacherId)}
                       >
-                        {t('attendance.removeException')}
+                        {/* {t('attendance.removeException')} */}
+                        <Trash2/>
                       </Button>
                     </div>
                   </td>

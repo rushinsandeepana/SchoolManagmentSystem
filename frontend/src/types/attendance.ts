@@ -22,6 +22,8 @@ export type TeacherAttendanceRecord = {
   remark?: string
   createdAt?: string
   updatedAt?: string
+  startTime?: string
+  endTime?: string
 }
 
 export type DailyTeacherAttendance = {
