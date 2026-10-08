@@ -1,5 +1,6 @@
 package com.school.management.service;
 
+import com.school.management.dto.request.CreateTimetableBatchRequest;
 import com.school.management.dto.request.TimetableRequest;
 import com.school.management.dto.response.TimetableResponse;
 import com.school.management.exception.BadRequestException;
@@ -18,8 +19,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -74,6 +78,116 @@ public class TimetableService {
                 timetableRepository.save(timetable)
         );
     }
+
+    @Transactional
+        public List<TimetableResponse> createBatch(
+                CreateTimetableBatchRequest request) {
+
+        List<TimetableRequest> slots = request.getSlots();
+
+        Set<String> teacherSlots = new HashSet<>();
+        Set<String> classSlots = new HashSet<>();
+
+        for (TimetableRequest slot : slots) {
+
+                String day = normalizeDay(slot.getDay());
+
+                Integer period = slot.getPeriod();
+                String teacherKey =
+                        slot.getTeacherId()
+                                + "|" + day
+                                + "|" + period;
+
+                if (!teacherSlots.add(teacherKey)) {
+
+                throw new BadRequestException(
+                        "Teacher is already assigned on "
+                                + day
+                                + ", Period "
+                                + period
+                                + " in this timetable."
+                );
+                }
+
+                String classKey =
+                        slot.getClassId()
+                                + "|" + day
+                                + "|" + period;
+
+                if (!classSlots.add(classKey)) {
+
+                throw new BadRequestException(
+                        "Class is already assigned on "
+                                + day
+                                + ", Period "
+                                + period
+                                + " in this timetable."
+                );
+                }
+        }
+        List<Timetable> timetables = new ArrayList<>();
+
+        for (TimetableRequest slot : slots) {
+
+                String day = normalizeDay(slot.getDay());
+
+                validatePeriod(slot.getPeriod());
+
+                User teacher =
+                        userRepository.findById(slot.getTeacherId())
+                                .orElseThrow(() ->
+                                        new ResourceNotFoundException(
+                                                "Teacher not found: "
+                                                        + slot.getTeacherId()
+                                        )
+                                );
+
+                Subject subject =
+                        subjectRepository.findById(slot.getSubjectId())
+                                .orElseThrow(() ->
+                                        new ResourceNotFoundException(
+                                                "Subject not found: "
+                                                        + slot.getSubjectId()
+                                        )
+                                );
+
+                SchoolClass schoolClass =
+                        schoolClassRepository.findById(slot.getClassId())
+                                .orElseThrow(() ->
+                                        new ResourceNotFoundException(
+                                                "Class not found: "
+                                                        + slot.getClassId()
+                                        )
+                                );
+
+                validateTimetable(
+                        teacher,
+                        subject,
+                        schoolClass,
+                        day,
+                        slot.getPeriod(),
+                        null
+                );
+
+                Timetable timetable =
+                        Timetable.builder()
+                                .teacher(teacher)
+                                .subject(subject)
+                                .schoolClass(schoolClass)
+                                .day(day)
+                                .period(slot.getPeriod())
+                                .build();
+
+                timetables.add(timetable);
+        }
+        List<Timetable> saved =
+                timetableRepository.saveAll(timetables);
+
+
+        return saved.stream()
+                .map(this::toResponse)
+                .toList();
+        }
 
     // =========================================================
     // GET ALL / FILTER
@@ -209,14 +323,6 @@ public class TimetableService {
         }
 
         validatePeriod(period);
-
-        // =========================================================
-        // VALIDATE FINAL TIMETABLE
-        //
-        // Exclude the current timetable ID because we are
-        // updating this existing record.
-        // =========================================================
-
         validateTimetable(
                 teacher,
                 subject,
@@ -348,102 +454,6 @@ public class TimetableService {
                 );
     }
 
-    // =========================================================
-    // TEACHER CONFLICT VALIDATION
-    // =========================================================
-
-//     private void validateTeacherConflict(
-//             Long teacherId,
-//             String day,
-//             Integer period,
-//             Long timetableId
-//     ) {
-
-//         boolean exists;
-
-//         if (timetableId == null) {
-
-//             exists =
-//                     timetableRepository
-//                             .existsByTeacherIdAndDayAndPeriod(
-//                                     teacherId,
-//                                     day,
-//                                     period
-//                             );
-
-//         } else {
-
-//             exists =
-//                     timetableRepository
-//                             .existsByTeacherIdAndDayAndPeriodAndIdNot(
-//                                     teacherId,
-//                                     day,
-//                                     period,
-//                                     timetableId
-//                             );
-//         }
-
-//         if (exists) {
-
-//             throw new BadRequestException(
-//                     "This teacher already has a timetable assigned for "
-//                             + day
-//                             + " period "
-//                             + period
-//             );
-//         }
-//     }
-
-    // =========================================================
-    // CLASS CONFLICT VALIDATION
-    // =========================================================
-
-//     private void validateClassConflict(
-//             Long classId,
-//             String day,
-//             Integer period,
-//             Long timetableId
-//     ) {
-
-//         boolean exists;
-
-//         if (timetableId == null) {
-
-//             exists =
-//                     timetableRepository
-//                             .existsBySchoolClassIdAndDayAndPeriod(
-//                                     classId,
-//                                     day,
-//                                     period
-//                             );
-
-//         } else {
-
-//             exists =
-//                     timetableRepository
-//                             .existsBySchoolClassIdAndDayAndPeriodAndIdNot(
-//                                     classId,
-//                                     day,
-//                                     period,
-//                                     timetableId
-//                             );
-//         }
-
-//         if (exists) {
-
-//             throw new BadRequestException(
-//                     "This class already has a timetable assigned for "
-//                             + day
-//                             + " period "
-//                             + period
-//             );
-//         }
-//     }
-
-    // =========================================================
-    // PERIOD VALIDATION
-    // =========================================================
-
     private void validatePeriod(Integer period) {
 
         if (period == null || period < 1 || period > 8) {
@@ -514,13 +524,13 @@ public class TimetableService {
     }
 
     private void validateTimetable(
-        User teacher,
-        Subject subject,
-        SchoolClass schoolClass,
-        String day,
-        Integer period,
-        Long timetableId
-    ) {
+                User teacher,
+                Subject subject,
+                SchoolClass schoolClass,
+                String day,
+                Integer period,
+                Long timetableId
+        ) {
 
         String teacherName = teacher.getFullName();
 
@@ -530,9 +540,73 @@ public class TimetableService {
                 schoolClass.getGrade()
                         + schoolClass.getSection();
 
-        // =========================================================
-        // 1. EXACT DUPLICATE
-        // =========================================================
+        // --------------------------------------------------
+        // 1. SAME TEACHER + SAME DAY + SAME PERIOD
+        // --------------------------------------------------
+
+        Optional<Timetable> teacherConflict =
+                timetableRepository.findByTeacherIdAndDayAndPeriod(
+                        teacher.getId(),
+                        day,
+                        period
+                );
+
+        if (teacherConflict.isPresent()
+                && !teacherConflict.get().getId().equals(timetableId)) {
+
+                Timetable existing = teacherConflict.get();
+
+                String existingClass =
+                        existing.getSchoolClass().getGrade()
+                                + existing.getSchoolClass().getSection();
+
+                throw new BadRequestException(
+                        "Teacher \"" + teacherName
+                                + "\" is already assigned to \""
+                                + existing.getSubject().getSubjectName()
+                                + "\" for Class "
+                                + existingClass
+                                + " on "
+                                + day
+                                + ", Period "
+                                + period
+                );
+        }
+
+
+        // --------------------------------------------------
+        // 2. SAME CLASS + SAME DAY + SAME PERIOD
+        // --------------------------------------------------
+
+        Optional<Timetable> classConflict =
+                timetableRepository.findBySchoolClassIdAndDayAndPeriod(
+                        schoolClass.getId(),
+                        day,
+                        period
+                );
+
+        if (classConflict.isPresent()
+                && !classConflict.get().getId().equals(timetableId)) {
+
+                Timetable existing = classConflict.get();
+
+                throw new BadRequestException(
+                        "Class " + className
+                                + " already has \""
+                                + existing.getSubject().getSubjectName()
+                                + "\" with Teacher \""
+                                + existing.getTeacher().getFullName()
+                                + "\" on "
+                                + day
+                                + ", Period "
+                                + period
+                );
+        }
+
+
+        // --------------------------------------------------
+        // 3. SAME TEACHER + SUBJECT + CLASS + DAY + PERIOD
+        // --------------------------------------------------
 
         boolean duplicate;
 
@@ -572,70 +646,6 @@ public class TimetableService {
                                 + "\" for Class "
                                 + className
                                 + " on "
-                                + day
-                                + ", Period "
-                                + period
-                );
-        }
-
-        // =========================================================
-        // 2. TEACHER CONFLICT
-        // =========================================================
-
-        Optional<Timetable> teacherConflict =
-                timetableRepository.findByTeacherIdAndDayAndPeriod(
-                        teacher.getId(),
-                        day,
-                        period
-                );
-
-        if (teacherConflict.isPresent()
-                && !teacherConflict.get().getId().equals(timetableId)) {
-
-                Timetable existing = teacherConflict.get();
-
-                String existingClass =
-                        existing.getSchoolClass().getGrade()
-                                + existing.getSchoolClass().getSection();
-
-                throw new BadRequestException(
-                        "Teacher \""
-                                + teacherName
-                                + "\" is already assigned to \""
-                                + existing.getSubject().getSubjectName()
-                                + "\" for Class "
-                                + existingClass
-                                + " on "
-                                + day
-                                + ", Period "
-                                + period
-                );
-        }
-
-        // =========================================================
-        // 3. CLASS CONFLICT
-        // =========================================================
-
-        Optional<Timetable> classConflict =
-                timetableRepository.findBySchoolClassIdAndDayAndPeriod(
-                        schoolClass.getId(),
-                        day,
-                        period
-                );
-
-        if (classConflict.isPresent()
-                && !classConflict.get().getId().equals(timetableId)) {
-
-                Timetable existing = classConflict.get();
-
-                throw new BadRequestException(
-                        "Class "
-                                + className
-                                + " already has \""
-                                + existing.getSubject().getSubjectName()
-                                + "\" with Teacher \""
-                                + existing.getTeacher().getFullName()
-                                + "\" on "
                                 + day
                                 + ", Period "
                                 + period

@@ -85,7 +85,6 @@ export default function ClassFormModal({
             placeholder={t('common.selectOption')}
             value={teacherId}
             onChange={(event: { target: { value: string } }) => setTeacherId(event.target.value)}
-            required
             title={t('validation.teacherRequired')}
             error={errors.teacherId}
             options={teachers.map((teacher) => ({

@@ -4,6 +4,8 @@ import { useTranslation } from 'react-i18next'
 import Modal from '../../../components/Modal'
 import { Button, SelectField } from '../../../components/ui'
 import { teacherTimetableApi } from '../../../api/timetableApi'
+import { subjectApi } from '../../../api/subjectApi'
+import { useToast } from '../../../context/ToastContext'
 import type {
   CreateTeacherTimetableSlotRequest,
   TeacherTimetable,
@@ -41,7 +43,7 @@ type Props = {
   open: boolean
   mode?: 'create' | 'edit'
   teachers: Teacher[]
-  subjects: Subject[]
+  // subjects: Subject[]
   classes: SchoolClass[]
   onClose: () => void
   onSuccess: () => void
@@ -84,7 +86,7 @@ export default function TimetableCreateModal({
   open,
   mode = 'create',
   teachers,
-  subjects,
+  // subjects,
   classes,
   onClose,
   onSuccess,
@@ -92,12 +94,15 @@ export default function TimetableCreateModal({
   timetable,
 }: Props) {
   const { t } = useTranslation()
+  const { showToast } = useToast()
 
   const [teacherId, setTeacherId] = useState('')
   const [subjectSections, setSubjectSections] = useState<SubjectSection[]>([])
   const [errors, setErrors] = useState<TimetableErrors>({})
   const [saving, setSaving] = useState(false)
   const [serverError, setServerError] = useState('')
+  const [subjects, setSubjects] = useState<Subject[]>([])
+  const [loadingSubjects, setLoadingSubjects] = useState(false)
 
   useEffect(() => {
     if (!open) {
@@ -157,6 +162,7 @@ export default function TimetableCreateModal({
 
   const resetForm = () => {
     setTeacherId('')
+    setSubjects([])
     setSubjectSections([])
     setErrors({})
     setServerError('')
@@ -172,6 +178,38 @@ export default function TimetableCreateModal({
     onClose()
   }
 
+  useEffect(() => {
+    if (!teacherId) {
+      setSubjects([])
+      return
+    }
+
+    const loadTeacherSubjects = async () => {
+      try {
+        setLoadingSubjects(true)
+
+        const response = await subjectApi.getSubjectsByTeacher(
+          Number(teacherId),
+        )
+
+        setSubjects(response.data || [])
+      } catch (error) {
+        console.error(error)
+
+        setSubjects([])
+
+        showToast(
+          t('common.error'),
+          'error',
+        )
+      } finally {
+        setLoadingSubjects(false)
+      }
+    }
+
+    loadTeacherSubjects()
+  }, [teacherId, showToast, t])
+
   const handleTeacherChange = (
     event: ChangeEvent<
       HTMLInputElement | HTMLSelectElement
@@ -180,7 +218,7 @@ export default function TimetableCreateModal({
     const value = event.target.value
 
     setTeacherId(value)
-
+    setSubjects([])
     setErrors((previous) => {
       const next = { ...previous }
 
@@ -199,7 +237,6 @@ export default function TimetableCreateModal({
       }
     }
   }
-
   const updateSubject = (
     sectionId: number,
     event: ChangeEvent<
@@ -451,18 +488,15 @@ export default function TimetableCreateModal({
       setSaving(true)
 
       if (mode === 'create') {
-        for (const section of subjectSections) {
-          for (const period of section.periods) {
-            const request = buildRequest(
-              section,
-              period,
-            )
+        const slots = subjectSections.flatMap((section) =>
+          section.periods.map((period) =>
+            buildRequest(section, period)
+          )
+        )
 
-            await teacherTimetableApi.create(
-              request,
-            )
-          }
-        }
+        await teacherTimetableApi.createBatch({
+          slots,
+        })
       }
 
       if (mode === 'edit') {
@@ -598,12 +632,14 @@ export default function TimetableCreateModal({
                       label={`Subject ${
                         index + 1
                       }`}
-                      placeholder={t(
-                        'common.selectOption',
-                      )}
-                      value={
-                        section.subjectId
+                      placeholder={
+                        loadingSubjects
+                          ? 'Loading subjects...'
+                          : subjects.length === 0
+                            ? 'No subjects available'
+                            : t('common.selectOption')
                       }
+                      value={section.subjectId}
                       onChange={(event) =>
                         updateSubject(
                           section.id,
@@ -619,9 +655,8 @@ export default function TimetableCreateModal({
                           `subject-${section.id}`
                         ]
                       }
-                      options={
-                        subjectOptions
-                      }
+                      options={subjectOptions}
+                      disabled={loadingSubjects}
                     />
                   </div>
 

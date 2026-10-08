@@ -253,6 +253,7 @@ export default function TimetableViewModal({
         <TimeTables
           columns={columns}
           data={rows}
+          headerClassName="bg-primary"
           rowKey={(row) => row.period}
           className="text-[10px] sm:text-xs"
           emptyMessage={t(

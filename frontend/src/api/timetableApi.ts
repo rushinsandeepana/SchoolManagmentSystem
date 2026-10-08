@@ -43,6 +43,16 @@ export const teacherTimetableApi = {
       payload,
     ),
 
+  createBatch: (
+    payload: {
+      slots: CreateTeacherTimetableSlotRequest[]
+    },
+  ) =>
+    api.post<TeacherTimetable[]>(
+      '/admin/timetables/batch',
+      payload,
+    ),
+
   /**
    * Update an existing timetable period.
    */

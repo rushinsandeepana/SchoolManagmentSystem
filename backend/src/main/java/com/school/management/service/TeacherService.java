@@ -162,6 +162,7 @@ public class TeacherService {
         }
         if (request.getSubjectIds() != null) {
             teacherSubjectRepository.deleteByTeacherId(id);
+            teacherSubjectRepository.flush();
             for (Long subjectId : request.getSubjectIds()) {
                 Subject subject = subjectRepository.findById(subjectId)
                         .orElseThrow(() ->

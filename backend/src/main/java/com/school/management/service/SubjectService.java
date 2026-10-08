@@ -12,6 +12,7 @@ import com.school.management.exception.ResourceNotFoundException;
 import com.school.management.mapper.EntityMapper;
 import com.school.management.model.entity.Subject;
 import com.school.management.repository.SubjectRepository;
+import com.school.management.repository.TeacherSubjectRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 public class SubjectService {
 
     private final SubjectRepository subjectRepository;
+    private final TeacherSubjectRepository teacherSubjectRepository;
 
     @Transactional
     public SubjectResponse createSubject(CreateSubjectRequest request) {
@@ -63,6 +65,23 @@ public class SubjectService {
         ).stream()
          .map(EntityMapper::toSubjectResponse)
          .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<SubjectResponse> getSubjectsByTeacher(Long teacherId) {
+        return teacherSubjectRepository
+                .findByTeacherId(teacherId)
+                .stream()
+                .map(ts -> {
+                    Subject subject = ts.getSubject();
+
+                    return SubjectResponse.builder()
+                            .id(subject.getId())
+                            .subjectName(subject.getSubjectName())
+                            .subjectCode(subject.getSubjectCode())
+                            .build();
+                })
+                .toList();
     }
 
     @Transactional

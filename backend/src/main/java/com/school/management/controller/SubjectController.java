@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,13 @@ public class SubjectController {
     @GetMapping("/all")
     public List<SubjectResponse> getAllSubjects() {
         return subjectService.getAllSubjects();
+    }
+
+    @GetMapping("/{teacherId}/teacher-subjects")
+    public ResponseEntity<List<SubjectResponse>> getTeacherSubjects(@PathVariable Long teacherId) {
+        return ResponseEntity.ok(
+                subjectService.getSubjectsByTeacher(teacherId)
+        );
     }
 
     @PostMapping

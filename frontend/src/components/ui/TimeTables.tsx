@@ -35,7 +35,7 @@ export default function TimeTables<T>({
         <table className="w-full min-w-full table-fixed border-collapse text-sm">
           <thead>
             <tr
-              className={`bg-surface-2 ${headerClassName}`}
+              className={`text-white ${headerClassName}`}
             >
               {columns.map((column) => (
                 <th
@@ -43,7 +43,7 @@ export default function TimeTables<T>({
                   scope="col"
                   className={`h-10 border border-border px-2 py-2 text-center text-xs font-semibold text-text sm:h-11 sm:px-3 sm:py-2.5 ${column.headerClassName ?? ''}`}
                 >
-                  <div className="w-full whitespace-normal break-words">
+                  <div className="w-full text-white whitespace-normal break-words">
                     {column.header}
                   </div>
                 </th>

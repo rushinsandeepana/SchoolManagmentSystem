@@ -1,5 +1,6 @@
 package com.school.management.controller;
 
+import com.school.management.dto.request.CreateTimetableBatchRequest;
 import com.school.management.dto.request.TimetableRequest;
 import com.school.management.dto.response.ApiMessage;
 import com.school.management.dto.response.TimetableResponse;
@@ -30,6 +31,13 @@ public class TimetableController {
             @Valid @RequestBody TimetableRequest request) {
 
         return timetableService.create(request);
+    }
+
+    @PostMapping("/batch")
+        public List<TimetableResponse> createBatch(
+                @Valid @RequestBody CreateTimetableBatchRequest request) {
+
+        return timetableService.createBatch(request);
     }
 
     // =========================================================

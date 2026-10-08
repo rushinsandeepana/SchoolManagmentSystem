@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { teacherTimetableApi } from '../../../api/timetableApi'
-import { subjectApi } from '../../../api/subjectApi'
+// import { subjectApi } from '../../../api/subjectApi'
 import { classApi } from '../../../api/classApi'
 import { periodApi } from '../../../api/periodApi'
 import { Button, DataTable } from '../../../components/ui'
@@ -98,24 +98,24 @@ export default function TimetablesPage() {
     loadTeachers()
   }, [showToast, t])
 
-  useEffect(() => {
-    const loadSubjects = async () => {
-      try {
-        const response = await subjectApi.getAllSubjects()
+  // useEffect(() => {
+  //   const loadSubjects = async () => {
+  //     try {
+  //       const response = await subjectApi.getAllSubjects()
 
-        const activeSubjects = (response.data || []).filter(
-          (subject: Subject) => subject.active,
-        )
+  //       const activeSubjects = (response.data || []).filter(
+  //         (subject: Subject) => subject.active,
+  //       )
 
-        setSubjects(activeSubjects)
-      } catch (error) {
-        console.error(error)
-        showToast(t('common.error'), 'error')
-      }
-    }
+  //       setSubjects(activeSubjects)
+  //     } catch (error) {
+  //       console.error(error)
+  //       showToast(t('common.error'), 'error')
+  //     }
+  //   }
 
-    loadSubjects()
-  }, [showToast, t])
+  //   loadSubjects()
+  // }, [showToast, t])
 
   useEffect(() => {
     const loadClasses = async () => {
@@ -351,7 +351,7 @@ export default function TimetablesPage() {
       <TimetableCreateModal
         open={showForm}
         teachers={teachers}
-        subjects={subjects}
+        // subjects={subjects}
         classes={classes}
         mode={editingTimetable ? 'edit' : 'create'}
         timetable={editingTimetable}
