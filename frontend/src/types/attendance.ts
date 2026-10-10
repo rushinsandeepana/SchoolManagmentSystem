@@ -1,4 +1,4 @@
-export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LEAVE' | 'HALF_DAY'
+export type AttendanceStatus = 'PRESENT' | 'ABSENT' | 'LEAVE' | 'HALF_DAY' | 'SHORT_LEAVE'
 
 export type ExceptionStatus = Exclude<AttendanceStatus, 'PRESENT'>
 

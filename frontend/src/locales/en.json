@@ -320,14 +320,16 @@
       "present": "Present",
       "absent": "Absent",
       "leave": "Leave",
-      "halfDay": "Half-day"
+      "halfDay": "Half-day",
+      "shortLeave": "Short leave"
     },
     "columns": {
       "status": "Status",
       "remark": "Remark",
       "teacherName": "Teacher Name",
       "startTime": "Start Time",
-      "endTime": "End Time"
+      "endTime": "End Time",
+      "leaveDuration": "Leave Duration"
     },
     "placeholders": {
       "teacher": "Select teacher",

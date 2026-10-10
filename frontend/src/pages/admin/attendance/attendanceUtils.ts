@@ -31,7 +31,11 @@ export function downloadBlob(data: BlobPart, fileName: string): void {
   window.URL.revokeObjectURL(url)
 }
 
-export function statusBadgeClass(status: AttendanceStatus): string {
+export function statusBadgeClass(status: AttendanceStatus, isShortLeave = false): string {
+  if (status === 'LEAVE' && isShortLeave) {
+    return 'badge badge-short-leave'
+  }
+
   switch (status) {
     case 'PRESENT':
       return 'badge badge-present'
@@ -39,6 +43,8 @@ export function statusBadgeClass(status: AttendanceStatus): string {
       return 'badge badge-absent'
     case 'LEAVE':
       return 'badge badge-leave'
+    case 'SHORT_LEAVE':
+      return 'badge badge-short-leave'
     case 'HALF_DAY':
       return 'badge badge-half-day'
     default:
@@ -57,6 +63,8 @@ export function getStatusLabel(
       return t('attendance.status.absent')
     case 'LEAVE':
       return t('attendance.status.leave')
+    case 'SHORT_LEAVE':
+      return t('attendance.status.shortLeave')
     case 'HALF_DAY':
       return t('attendance.status.halfDay')
     default:

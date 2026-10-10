@@ -321,14 +321,16 @@
       "present": "පැමිණි",
       "absent": "නොපැමිණි",
       "leave": "නිවාඩු",
-      "halfDay": "අර්ධ දින"
+      "halfDay": "අර්ධ දින",
+      "shortLeave": "කෙටි නිවාඩු"
     },
     "columns": {
       "status": "තත්ත්වය",
       "remark": "සටහන",
       "teacherName": "ගුරුවරයාගේ නම",
       "startTime": "ආරම්භක වේලාව",
-      "endTime": "අවසන් වේලාව"
+      "endTime": "අවසන් වේලාව",
+      "leaveDuration": "නිවාඩු කාලය"
     },
     "placeholders": {
       "teacher": "ගුරුවරයා තෝරන්න",

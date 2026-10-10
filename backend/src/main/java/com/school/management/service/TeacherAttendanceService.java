@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -60,6 +61,7 @@ public class TeacherAttendanceService {
                 case PRESENT -> presentCount++;
                 case ABSENT -> absentCount++;
                 case LEAVE -> leaveCount++;
+                case SHORT_LEAVE -> leaveCount++;
                 case HALF_DAY -> halfDayCount++;
             }
 
@@ -72,6 +74,8 @@ public class TeacherAttendanceService {
                     .attendanceDate(date)
                     .status(status)
                     .remark(remark)
+                    .startTime(record != null ? record.getStartTime() : null)
+                    .endTime(record != null ? record.getEndTime() : null)
                     .createdAt(record != null ? record.getCreatedAt() : null)
                     .updatedAt(record != null ? record.getUpdatedAt() : null)
                     .build());
@@ -115,6 +119,8 @@ public class TeacherAttendanceService {
                 TeacherAttendanceItemRequest exception = exceptionMap.get(teacher.getId());
                 AttendanceStatus status = (exception != null) ? exception.getStatus() : AttendanceStatus.PRESENT;
                 String remark = (exception != null) ? exception.getRemark() : null;
+                LocalTime startTime = exception != null ? exception.getStartTime() : null;
+                LocalTime endTime = exception != null ? exception.getEndTime() : null;
 
                 TeacherAttendance record = existingMap.get(teacher.getId());
                 if (record == null) {
@@ -123,10 +129,14 @@ public class TeacherAttendanceService {
                             .attendanceDate(date)
                             .status(status)
                             .remark(remark)
+                            .startTime(startTime)
+                            .endTime(endTime)
                             .build();
                 } else {
                     record.setStatus(status);
                     record.setRemark(remark);
+                    record.setStartTime(startTime);
+                    record.setEndTime(endTime);
                 }
                 toSave.add(record);
             }
@@ -146,10 +156,14 @@ public class TeacherAttendanceService {
                             .attendanceDate(date)
                             .status(item.getStatus())
                             .remark(item.getRemark())
+                            .startTime(item.getStartTime())
+                            .endTime(item.getEndTime())
                             .build();
                 } else {
                     record.setStatus(item.getStatus());
                     record.setRemark(item.getRemark());
+                    record.setStartTime(item.getStartTime());
+                    record.setEndTime(item.getEndTime());
                 }
                 toSave.add(record);
             }
@@ -204,6 +218,7 @@ public class TeacherAttendanceService {
                     case PRESENT -> present++;
                     case ABSENT -> absent++;
                     case LEAVE -> leave++;
+                    case SHORT_LEAVE -> leave++;
                     case HALF_DAY -> halfDay++;
                 }
             }
@@ -254,6 +269,8 @@ public class TeacherAttendanceService {
                 .attendanceDate(record.getAttendanceDate())
                 .status(record.getStatus())
                 .remark(record.getRemark())
+                .startTime(record.getStartTime())
+                .endTime(record.getEndTime())
                 .createdAt(record.getCreatedAt())
                 .updatedAt(record.getUpdatedAt())
                 .build();

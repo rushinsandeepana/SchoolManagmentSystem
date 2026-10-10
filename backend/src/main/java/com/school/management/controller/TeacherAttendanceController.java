@@ -4,7 +4,6 @@ import com.school.management.dto.request.TeacherAttendanceSaveRequest;
 import com.school.management.dto.response.DailyTeacherAttendanceResponse;
 import com.school.management.dto.response.TeacherAttendanceResponse;
 import com.school.management.dto.response.TeacherAttendanceSummaryResponse;
-import com.school.management.exception.BadRequestException;
 import com.school.management.security.UserPrincipal;
 import com.school.management.service.TeacherAttendanceExcelService;
 import com.school.management.service.TeacherAttendanceService;

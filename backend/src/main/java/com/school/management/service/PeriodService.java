@@ -7,17 +7,24 @@ import com.school.management.dto.response.PageResponse;
 import com.school.management.dto.response.PeriodContentResponse;
 import com.school.management.dto.response.PeriodDetailResponse;
 import com.school.management.dto.response.PeriodSlotResponse;
+import com.school.management.dto.response.UserResponse;
 import com.school.management.exception.BadRequestException;
 import com.school.management.exception.ResourceNotFoundException;
 import com.school.management.mapper.EntityMapper;
 import com.school.management.model.entity.PeriodContent;
 import com.school.management.model.entity.PeriodSlot;
+import com.school.management.model.entity.PeriodTimeSlot;
+import com.school.management.model.entity.TeacherAttendance;
 import com.school.management.model.entity.User;
-import com.school.management.model.enums.Role;
+import com.school.management.model.enums.AttendanceStatus;
+import com.school.management.model.enums.DayOfWeek;
 import com.school.management.model.enums.PeriodType;
+import com.school.management.model.enums.Role;
 import com.school.management.repository.MediaFileRepository;
 import com.school.management.repository.PeriodContentRepository;
 import com.school.management.repository.PeriodSlotRepository;
+import com.school.management.repository.PeriodTimeSlotRepository;
+import com.school.management.repository.TeacherAttendanceRepository;
 import com.school.management.repository.UserRepository;
 import com.school.management.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +36,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Slf4j 
 @Service
@@ -37,6 +50,8 @@ import java.util.List;
 public class PeriodService {
 
     private final PeriodSlotRepository periodSlotRepository;
+    private final PeriodTimeSlotRepository periodTimeSlotRepository;
+    private final TeacherAttendanceRepository teacherAttendanceRepository;
     private final PeriodContentRepository periodContentRepository;
     private final MediaFileRepository mediaFileRepository;
     private final UserRepository userRepository;
@@ -70,6 +85,59 @@ public class PeriodService {
         return periodSlotRepository.findByTeacherIdOrderByDayOfWeekAscPeriodNumberAsc(teacherId).stream()
                 .map(EntityMapper::toPeriodSlotResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserResponse> getAvailableTeachers(LocalDate date, Integer periodNumber, Long selectedTeacherId) {
+        if (date == null) {
+            throw new BadRequestException("Date is required");
+        }
+        if (periodNumber == null || periodNumber < 1 || periodNumber > 8) {
+            throw new BadRequestException("Period number must be between 1 and 8");
+        }
+        if (date.getDayOfWeek() == java.time.DayOfWeek.SATURDAY
+                || date.getDayOfWeek() == java.time.DayOfWeek.SUNDAY) {
+            throw new BadRequestException("Available teachers can only be requested for weekdays");
+        }
+
+        PeriodTimeSlot timeSlot = periodTimeSlotRepository.findById(periodNumber)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Period time slot not configured for period: " + periodNumber));
+        DayOfWeek dayOfWeek = DayOfWeek.valueOf(date.getDayOfWeek().name());
+        Set<Long> assignedTeacherIds = new HashSet<>(
+                periodSlotRepository.findTeacherIdsByDayOfWeekAndPeriodNumber(dayOfWeek, periodNumber));
+        Map<Long, TeacherAttendance> attendanceByTeacherId =
+                teacherAttendanceRepository.findByAttendanceDateWithTeacher(date).stream()
+                        .collect(Collectors.toMap(
+                                record -> record.getTeacher().getId(),
+                                Function.identity(),
+                                (first, duplicate) -> first));
+
+        return userRepository.findByRoleOrderByFullNameAsc(Role.TEACHER).stream()
+                .filter(User::isActive)
+                .filter(teacher -> !assignedTeacherIds.contains(teacher.getId())
+                        || teacher.getId().equals(selectedTeacherId))
+                .filter(teacher -> isAvailableForTimeSlot(
+                        attendanceByTeacherId.get(teacher.getId()), timeSlot))
+                .map(EntityMapper::toUserResponse)
+                .toList();
+    }
+
+    private boolean isAvailableForTimeSlot(TeacherAttendance attendance, PeriodTimeSlot timeSlot) {
+        if (attendance == null || attendance.getStatus() == AttendanceStatus.PRESENT) {
+            return true;
+        }
+        if (attendance.getStatus() == AttendanceStatus.ABSENT) {
+            return false;
+        }
+
+        if (attendance.getStartTime() == null || attendance.getEndTime() == null
+                || !attendance.getStartTime().isBefore(attendance.getEndTime())) {
+            return false;
+        }
+
+        return !attendance.getStartTime().isBefore(timeSlot.getEndTime())
+                || !attendance.getEndTime().isAfter(timeSlot.getStartTime());
     }
 
     @Transactional

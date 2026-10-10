@@ -47,8 +47,8 @@ type PickerState = {
   anchor: HTMLElement
 }
 
-const PRESENT_START_TIME = '07:30'
-const PRESENT_END_TIME = '13:30'
+// const PRESENT_START_TIME = '07:30'
+// const PRESENT_END_TIME = '13:30'
 const STATUS_BUTTON_CODES: Record<AttendanceStatus | 'SHORT_LEAVE', string> = {
   PRESENT: 'PR',
   ABSENT: 'AB',
@@ -57,13 +57,32 @@ const STATUS_BUTTON_CODES: Record<AttendanceStatus | 'SHORT_LEAVE', string> = {
   HALF_DAY: 'HD',
 }
 
+const normalizeTimeValue = (time?: string | null) => {
+  if (typeof time !== 'string') return undefined
+
+  const trimmed = time.trim()
+  const match = /^(\d{1,2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/.exec(trimmed)
+  if (!match || trimmed === '-') return undefined
+
+  const hours = Number(match[1])
+  const minutes = Number(match[2])
+  if (hours > 23 || minutes > 59) return undefined
+
+  return `${match[1].padStart(2, '0')}:${match[2]}`
+}
+
 const formatRosterTime = (time?: string) => {
   if (!time) return '—'
 
-  const match = /^(\d{1,2}):(\d{2})$/.exec(time)
-  if (!match) return time
+  const match = /^(\d{1,2}):(\d{2})$/.exec(time.trim())
+  if (!match) return '—'
 
   const hours24 = Number(match[1])
+  const minutes = Number(match[2])
+  if (Number.isNaN(hours24) || Number.isNaN(minutes) || hours24 < 0 || hours24 > 23 || minutes < 0 || minutes > 59) {
+    return '—'
+  }
+
   const hours12 = hours24 % 12 || 12
   const period = hours24 < 12 ? 'AM' : 'PM'
   return `${hours12}.${match[2]} ${period}`
@@ -171,6 +190,8 @@ export default function AttendanceRosterCard({
     return teachers.map((teacher) => {
       const exception = exceptionMap.get(teacher.id)
       const status = exception?.status ?? 'PRESENT'
+      const startTime = normalizeTimeValue(exception?.startTime)
+      const endTime = normalizeTimeValue(exception?.endTime)
 
       return {
         id: teacher.id,
@@ -178,8 +199,8 @@ export default function AttendanceRosterCard({
         username: teacher.username,
         status,
         remark: exception?.remark,
-        startTime: exception?.startTime ?? (status === 'PRESENT' ? PRESENT_START_TIME : undefined),
-        endTime: exception?.endTime ?? (status === 'PRESENT' ? PRESENT_END_TIME : undefined),
+        startTime,
+        endTime,
         isException: Boolean(exception),
       }
     })
@@ -203,8 +224,15 @@ export default function AttendanceRosterCard({
         key: 'status',
         label: t('attendance.columns.status'),
         render: (row: RosterRow) => (
-          <span className={statusBadgeClass(row.status)}>
-            {getStatusLabel(row.status, t)}
+          <span className={statusBadgeClass(
+            row.status,
+            row.status === 'SHORT_LEAVE' ||
+              (row.status === 'LEAVE' && Boolean(row.startTime && row.endTime))
+          )}>
+            {row.status === 'SHORT_LEAVE' ||
+              (row.status === 'LEAVE' && row.startTime && row.endTime)
+              ? t('attendance.shortLeave')
+              : getStatusLabel(row.status, t)}
           </span>
         ),
       },
@@ -214,14 +242,35 @@ export default function AttendanceRosterCard({
         render: (row: RosterRow) => row.remark || '—',
       },
       {
-        key: 'startTime',
-        label: t('attendance.columns.startTime'),
-        render: (row: RosterRow) => formatRosterTime(row.startTime),
-      },
-      {
-        key: 'endTime',
-        label: t('attendance.columns.endTime'),
-        render: (row: RosterRow) => formatRosterTime(row.endTime),
+        key: 'leaveDuration',
+        label: t('attendance.columns.leaveDuration'),
+        render: (row: RosterRow) => {
+          const startTime = normalizeTimeValue(row.startTime)
+          const endTime = normalizeTimeValue(row.endTime)
+          if (!startTime || !endTime) return '—'
+
+          const formatTime = (time: string) => {
+            const match = /^(\d{1,2}):(\d{2})$/.exec(time.trim())
+            if (!match) return '—'
+
+            const hours = Number(match[1])
+            const minutes = Number(match[2])
+            if (Number.isNaN(hours) || Number.isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+              return '—'
+            }
+
+            const date = new Date()
+            date.setHours(hours, minutes, 0, 0)
+
+            return date.toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true,
+            })
+          }
+
+          return `${formatTime(startTime)} to ${formatTime(endTime)}`
+        },
       },
       {
         key: 'actions',
@@ -237,7 +286,12 @@ export default function AttendanceRosterCard({
               {row.isException ? (
                 <>
                   <SelectField
-                    value={row.status}
+                    value={
+                      row.status === 'SHORT_LEAVE' ||
+                      (row.status === 'LEAVE' && row.startTime && row.endTime)
+                        ? 'SHORT_LEAVE'
+                        : row.status
+                    }
                     onChange={(event) => handleStatusSelection(row, event.target.value)}
                     options={[
                       ...EXCEPTION_STATUSES.map((st) => ({
@@ -336,6 +390,7 @@ export default function AttendanceRosterCard({
             { value: 'PRESENT', label: t('attendance.status.present') },
             { value: 'ABSENT', label: t('attendance.status.absent') },
             { value: 'LEAVE', label: t('attendance.status.leave') },
+            { value: 'SHORT_LEAVE', label: t('attendance.status.shortLeave') },
             { value: 'HALF_DAY', label: t('attendance.status.halfDay') },
           ]}
           className="min-w-[10rem]"
@@ -441,7 +496,7 @@ export default function AttendanceRosterCard({
                 disabled={!startTime || !endTime || endTime <= startTime}
                 onClick={() =>
                   savePickerSelection(
-                    'LEAVE',
+                    'SHORT_LEAVE',
                     t('attendance.shortLeave'),
                     startTime,
                     endTime

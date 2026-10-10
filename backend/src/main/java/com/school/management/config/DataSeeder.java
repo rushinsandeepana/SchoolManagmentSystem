@@ -1,27 +1,30 @@
 package com.school.management.config;
 
-// import com.school.management.model.entity.PeriodSlot;
+import com.school.management.model.entity.PeriodTimeSlot;
 import com.school.management.model.entity.User;
-// import com.school.management.model.enums.DayOfWeek;
-// import com.school.management.model.enums.PeriodType;
 import com.school.management.model.enums.Role;
-// import com.school.management.repository.PeriodSlotRepository;
+import com.school.management.repository.PeriodTimeSlotRepository;
 import com.school.management.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalTime;
+import java.util.List;
+
 @Component
 @RequiredArgsConstructor
 public class DataSeeder implements CommandLineRunner {
 
     private final UserRepository userRepository;
-    // private final PeriodSlotRepository periodSlotRepository;
+    private final PeriodTimeSlotRepository periodTimeSlotRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
+        seedPeriodTimeSlots();
+
         if (userRepository.findByUsername("admin").isEmpty()) {
             userRepository.save(User.builder()
                     .username("admin")
@@ -34,7 +37,7 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         if (userRepository.findByUsername("teacher1").isEmpty()) {
-            User teacher = userRepository.save(User.builder()
+            userRepository.save(User.builder()
                     .username("teacher1")
                     .password(passwordEncoder.encode("teach123"))
                     .fullName("Nimal Perera")
@@ -43,8 +46,6 @@ public class DataSeeder implements CommandLineRunner {
                     .role(Role.TEACHER)
                     .active(true)
                     .build());
-
-            // seedWeek(teacher);
         }
 
         if (userRepository.findByUsername("teacher2").isEmpty()) {
@@ -60,33 +61,26 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
-    // private void seedWeek(User teacher) {
-    //     for (DayOfWeek day : DayOfWeek.values()) {
-    //         for (int p = 1; p <= 8; p++) {
-    //             PeriodType type;
-    //             String subject = null;
-    //             String className = null;
-    //             if (p <= 4) {
-    //                 type = PeriodType.MANDATORY;
-    //                 subject = "Mathematics";
-    //                 className = "Grade " + (6 + (p % 3));
-    //             } else if (p == 5 || p == 6) {
-    //                 type = PeriodType.RELIEF;
-    //                 subject = "Relief";
-    //                 className = "Grade 8";
-    //             } else {
-    //                 type = PeriodType.FREE;
-    //             }
-    //             periodSlotRepository.save(PeriodSlot.builder()
-    //                     .teacher(teacher)
-    //                     .dayOfWeek(day)
-    //                     .periodNumber(p)
-    //                     .periodType(type)
-    //                     .subject(subject)
-    //                     .className(className)
-    //                     .title(type == PeriodType.FREE ? "Free Period" : subject + " - P" + p)
-    //                     .build());
-    //         }
-    //     }
-    // }
+    private void seedPeriodTimeSlots() {
+        List<PeriodTimeSlot> timeSlots = List.of(
+                periodTimeSlot(1, "07:30", "08:30"),
+                periodTimeSlot(2, "08:30", "09:10"),
+                periodTimeSlot(3, "09:10", "09:50"),
+                periodTimeSlot(4, "09:50", "10:30"),
+                periodTimeSlot(5, "10:50", "11:30"),
+                periodTimeSlot(6, "11:30", "12:10"),
+                periodTimeSlot(7, "12:10", "12:50"),
+                periodTimeSlot(8, "12:50", "13:30")
+        );
+
+        periodTimeSlotRepository.saveAll(timeSlots);
+    }
+
+    private PeriodTimeSlot periodTimeSlot(int periodNumber, String startTime, String endTime) {
+        return PeriodTimeSlot.builder()
+                .periodNumber(periodNumber)
+                .startTime(LocalTime.parse(startTime))
+                .endTime(LocalTime.parse(endTime))
+                .build();
+    }
 }

@@ -98,7 +98,9 @@ export default function TeacherAttendancePage() {
 
   const counts = useMemo(() => {
     const absent = exceptions.filter((item) => item.status === 'ABSENT').length
-    const leave = exceptions.filter((item) => item.status === 'LEAVE').length
+    const leave = exceptions.filter(
+      (item) => item.status === 'LEAVE' || item.status === 'SHORT_LEAVE'
+    ).length
     const halfDay = exceptions.filter((item) => item.status === 'HALF_DAY').length
     const present = Math.max(0, teachers.length - exceptions.length)
     return { present, absent, leave, halfDay }
@@ -148,6 +150,11 @@ export default function TeacherAttendancePage() {
     startTime?: string,
     endTime?: string
   ) => {
+    const preserveTimeRange =
+      status === 'SHORT_LEAVE' ||
+      status === 'HALF_DAY' ||
+      (status === 'LEAVE' && (startTime !== undefined || endTime !== undefined))
+
     setExceptionsForDate(
       exceptions.map((item) =>
         item.teacherId === teacherId
@@ -155,12 +162,8 @@ export default function TeacherAttendancePage() {
               ...item,
               status,
               ...(remark === undefined ? {} : { remark }),
-              startTime: status === 'LEAVE' || status === 'HALF_DAY'
-                ? startTime ?? item.startTime
-                : undefined,
-              endTime: status === 'LEAVE' || status === 'HALF_DAY'
-                ? endTime ?? item.endTime
-                : undefined,
+              startTime: preserveTimeRange ? (startTime ?? item.startTime) : undefined,
+              endTime: preserveTimeRange ? (endTime ?? item.endTime) : undefined,
             }
           : item
       )
@@ -197,7 +200,7 @@ export default function TeacherAttendancePage() {
           startTime: e.startTime,
           endTime: e.endTime,
         })),
-      }
+      }      
       await attendanceApi.saveDaily(payload)
       setIsSaved(true)
       showToast(t('attendance.saved'), 'success')
@@ -242,7 +245,7 @@ export default function TeacherAttendancePage() {
       setExportingRange(false)
     }
   }
-console.log("exceptions", exceptions);
+
   return (
     <div className="fade-in">
       {/* Top Header */}

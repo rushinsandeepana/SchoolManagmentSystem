@@ -80,6 +80,7 @@ public class TeacherAttendanceExcelService {
             statusStyles.put(AttendanceStatus.PRESENT, createStatusStyle(workbook, presentBg, presentFg));
             statusStyles.put(AttendanceStatus.ABSENT, createStatusStyle(workbook, absentBg, absentFg));
             statusStyles.put(AttendanceStatus.LEAVE, createStatusStyle(workbook, leaveBg, leaveFg));
+            statusStyles.put(AttendanceStatus.SHORT_LEAVE, createStatusStyle(workbook, leaveBg, leaveFg));
             statusStyles.put(AttendanceStatus.HALF_DAY, createStatusStyle(workbook, halfDayBg, halfDayFg));
 
             int rowIdx = 0;
@@ -245,6 +246,7 @@ public class TeacherAttendanceExcelService {
             statusStyles.put(AttendanceStatus.PRESENT, createStatusStyle(workbook, presentBg, presentFg));
             statusStyles.put(AttendanceStatus.ABSENT, createStatusStyle(workbook, absentBg, absentFg));
             statusStyles.put(AttendanceStatus.LEAVE, createStatusStyle(workbook, leaveBg, leaveFg));
+            statusStyles.put(AttendanceStatus.SHORT_LEAVE, createStatusStyle(workbook, leaveBg, leaveFg));
             statusStyles.put(AttendanceStatus.HALF_DAY, createStatusStyle(workbook, halfDayBg, halfDayFg));
 
             // ==================== SHEET 1: ATTENDANCE MATRIX ====================
@@ -368,6 +370,11 @@ public class TeacherAttendanceExcelService {
                                 lCount++;
                                 dateCell.setCellValue("L");
                                 dateCell.setCellStyle(statusStyles.get(AttendanceStatus.LEAVE));
+                            }
+                            case SHORT_LEAVE -> {
+                                lCount++;
+                                dateCell.setCellValue("SL");
+                                dateCell.setCellStyle(statusStyles.get(AttendanceStatus.SHORT_LEAVE));
                             }
                             case HALF_DAY -> {
                                 hdCount++;

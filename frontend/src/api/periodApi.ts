@@ -1,6 +1,7 @@
 import api from '../services/api'
 import type { ListQuery, PageResponse } from '../types/paging'
 import type { PeriodSlot, PeriodType } from '../types/period'
+import type { Teacher } from '../types/teacher'
 
 export const periodApi = {
   // getTeachers: () =>
@@ -8,6 +9,10 @@ export const periodApi = {
   //     params: { page: 0, size: 100 },
   //   }),
   getTeachers: () => api.get('/admin/all/teachers'),
+  getAvailableTeachers: (date: string, periodNumber: number, teacherId?: number) =>
+    api.get<Teacher[]>('/admin/periods/available-teachers', {
+      params: { date, periodNumber, teacherId },
+    }),
   getAllAssignments: (params?: ListQuery & { periodType?: PeriodType }) =>
     api.get<PageResponse<PeriodSlot>>('/admin/periods', {
       params: {
@@ -17,7 +22,6 @@ export const periodApi = {
         periodType: params?.periodType || undefined,
       },
     }),
-  getTeacherSchedule: (teacherId: number | string) => api.get(`/admin/teachers/${teacherId}/schedule`),
   assign: (payload: Record<string, unknown>) => api.post('/admin/periods', payload),
   delete: (assignmentId: number) => api.delete(`/admin/periods/${assignmentId}`),
 }

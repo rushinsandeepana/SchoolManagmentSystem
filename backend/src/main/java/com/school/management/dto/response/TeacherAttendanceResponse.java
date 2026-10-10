@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Data
 @Builder
@@ -22,6 +23,8 @@ public class TeacherAttendanceResponse {
     private LocalDate attendanceDate;
     private AttendanceStatus status;
     private String remark;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

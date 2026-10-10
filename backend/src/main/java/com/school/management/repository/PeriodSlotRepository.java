@@ -34,6 +34,14 @@ public interface PeriodSlotRepository extends JpaRepository<PeriodSlot, Long> {
 
     List<PeriodSlot> findByTeacherOrderByDayOfWeekAscPeriodNumberAsc(User teacher);
     List<PeriodSlot> findByTeacherIdOrderByDayOfWeekAscPeriodNumberAsc(Long teacherId);
+    @Query("""
+            SELECT p.teacher.id FROM PeriodSlot p
+            WHERE p.dayOfWeek = :dayOfWeek
+              AND p.periodNumber = :periodNumber
+            """)
+    List<Long> findTeacherIdsByDayOfWeekAndPeriodNumber(
+            @Param("dayOfWeek") DayOfWeek dayOfWeek,
+            @Param("periodNumber") Integer periodNumber);
     Optional<PeriodSlot> findByTeacherIdAndDayOfWeekAndPeriodNumber(Long teacherId, DayOfWeek dayOfWeek, Integer periodNumber);
     void deleteByTeacherId(Long teacherId);
 }

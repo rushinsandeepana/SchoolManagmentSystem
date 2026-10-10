@@ -7,7 +7,6 @@ import { useToast } from '../../../context/ToastContext'
 import type { PeriodFilter, PeriodForm, PeriodSlot } from '../../../types/period'
 import type { Subject } from '../../../types/subject'
 import { subjectApi } from '../../../api/subjectApi'
-import type { Teacher } from '../../../types/teacher'
 import type { SchoolClass } from '../../../types/class'
 import { classApi } from '../../../api/classApi'
 import { Button, DataTable } from '../../../components/ui'
@@ -51,7 +50,6 @@ export default function AssignPeriodsPage() {
   const { t } = useTranslation()
   const { showToast } = useToast()
   const navigate = useNavigate()
-  const [teachers, setTeachers] = useState<Array<{ id: number; fullName: string }>>([])
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [teacherId, setTeacherId] = useState<string>('')
   const [form, setForm] = useState<PeriodForm>(emptyForm)
@@ -78,13 +76,6 @@ export default function AssignPeriodsPage() {
   useEffect(() => {
     if (list.error) showToast(list.error, 'error')
   }, [list.error, showToast])
-
-  useEffect(() => {
-    periodApi.getTeachers().then((res) => {
-      const list = (res.data || []).filter((teacher: Teacher) => teacher.active)
-      setTeachers(list)
-    })
-  }, [])
 
   useEffect(() => {
     subjectApi.getAllSubjects().then((res) => {
@@ -235,7 +226,6 @@ export default function AssignPeriodsPage() {
 
       <AssignPeriodFormModal
         open={showForm}
-        teachers={teachers}
         subjects={subjects}
         classes={classes}
         teacherId={teacherId}

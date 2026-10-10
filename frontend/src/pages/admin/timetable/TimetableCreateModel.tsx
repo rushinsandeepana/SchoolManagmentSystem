@@ -183,7 +183,6 @@ export default function TimetableCreateModal({
       setSubjects([])
       return
     }
-
     const loadTeacherSubjects = async () => {
       try {
         setLoadingSubjects(true)

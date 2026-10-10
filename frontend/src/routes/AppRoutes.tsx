@@ -50,7 +50,6 @@ export default function AppRoutes() {
           <Route path="timetables" element={<TimetablesPage />} />
 
           <Route path="teacher-timetable" element={<TimetablesPage />} />
-          {/* <Route path="teacher-timetable/create" element={<TimetableCreate />} /> */}
           {/* <Route path="teacher-timetable/:id" element={<TeacherTimetableViewPage />} />
           <Route path="teacher-timetable/:id/edit" element={<TeacherTimetableEditPage />} /> */}
         </Route>
